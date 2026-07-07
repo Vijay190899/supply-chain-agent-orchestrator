@@ -1,4 +1,4 @@
-.PHONY: install lint format test run docker help
+.PHONY: install lint format test run docker compare help
 
 help:
 	@echo "install  - create venv and install deps with uv"
@@ -7,6 +7,7 @@ help:
 	@echo "test     - run pytest"
 	@echo "run      - run a simulated disruption scenario"
 	@echo "docker   - build the container image"
+	@echo "compare  - benchmark LangGraph vs CrewAI (needs OPENAI_API_KEY + compare extra)"
 
 install:
 	uv sync --extra dev
@@ -26,3 +27,7 @@ run:
 
 docker:
 	docker build -t supplyagents:local .
+
+compare:
+	uv sync --extra dev --extra compare
+	uv run python -m supplyagents.compare.benchmark

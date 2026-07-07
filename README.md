@@ -47,8 +47,8 @@ In progress, built in the open.
 - [x] Action guardrails
 - [x] Simulation CLI (pause/resume approval flow)
 - [x] MCP tool server for the data feeds (run any scenario with `--mcp`)
-- [ ] CrewAI re-implementation
-- [ ] Written LangGraph vs CrewAI benchmark
+- [x] CrewAI re-implementation (two-phase kickoff around the approval gate, `compare` extra)
+- [x] Written LangGraph vs CrewAI comparison: [docs/COMPARISON.md](docs/COMPARISON.md); runtime table pending an API key (`make compare` fills it)
 - [x] Observability: per-node timings always on, Langfuse/LangSmith export when keys are set
 - [ ] GCP deploy
 

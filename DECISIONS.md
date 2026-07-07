@@ -4,6 +4,8 @@ Running log, newest first. Non-obvious trade-offs get a full record under [docs/
 
 | Date | Decision | Notes |
 |---|---|---|
+| 2026-07-07 | CrewAI gate lives outside the crew | CrewAI can't park a half-finished run, so the threshold check sits in Python between two kickoffs. That asymmetry is itself the headline comparison finding. |
+| 2026-07-07 | Benchmark refuses to run without a key | No canned numbers: the runtime table stays "pending" until a real model runs both sides. Structural findings stand on their own. |
 | 2026-07-07 | Timings local and always on, exporters opt-in | A run should never lose its latency data because a key is missing, and CI should never need a tracing account. Langfuse/LangSmith switch on via env keys only. |
 | 2026-07-07 | Feeds behind a protocol, MCP as one transport | `Feed` protocol with LocalFeed (in-process, tests) and MCPFeed (stdio). The graph doesn't know which it got; the tool surface is the contract. |
 | 2026-07-07 | MCPFeed opens a session per tool call | Simple, avoids async state inside sync graph nodes, fine for a handful of calls per run. Long-lived session is the optimization path if call volume grows. |
