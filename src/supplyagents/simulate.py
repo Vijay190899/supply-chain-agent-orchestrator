@@ -9,6 +9,7 @@ Examples:
     python -m supplyagents.simulate --scenario clear
     python -m supplyagents.simulate --scenario storm-north-sea
     python -m supplyagents.simulate --scenario suez-blockage --reject
+    python -m supplyagents.simulate --scenario storm-north-sea --mcp
 """
 
 import argparse
@@ -19,6 +20,7 @@ from langgraph.types import Command
 
 from supplyagents import providers
 from supplyagents.config import get_settings
+from supplyagents.feeds import MCPFeed
 from supplyagents.graph import build_graph
 
 
@@ -51,18 +53,25 @@ def main() -> None:
         default=None,
         help="Thread id for the checkpoint store (default: a fresh uuid).",
     )
+    parser.add_argument(
+        "--mcp",
+        action="store_true",
+        help="Fetch feeds through the MCP server (spawned over stdio) instead of in-process.",
+    )
     args = parser.parse_args()
 
     settings = get_settings()
     thread_id = args.thread or f"sim-{uuid.uuid4().hex[:8]}"
     config = {"configurable": {"thread_id": thread_id}}
+    feed = MCPFeed() if args.mcp else None
 
     print(f"scenario : {args.scenario}")
     print(f"thread   : {thread_id}")
+    print(f"feeds    : {'MCP server (stdio)' if args.mcp else 'in-process'}")
     print(f"threshold: {settings.human_approval_threshold:.0%} cost override\n")
 
     with SqliteSaver.from_conn_string(settings.checkpoint_db) as saver:
-        graph = build_graph(saver)
+        graph = build_graph(saver, feed=feed)
         result = graph.invoke({"scenario": args.scenario, "events": []}, config)
 
         interrupts = result.get("__interrupt__")

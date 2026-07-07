@@ -4,10 +4,10 @@
 
 | | |
 |---|---|
-| **Status** | In development, core orchestrator implemented |
+| **Status** | In development, core orchestrator and MCP feeds implemented |
 | **Owner** | Vijay Ananth Karunanithi |
 | **Last updated** | 2026-07-07 |
-| **Version** | 0.2.0 |
+| **Version** | 0.3.0 |
 
 ---
 
@@ -59,7 +59,8 @@ flowchart TD
 - **CrewAI (comparison):** the same four-role workflow expressed as a crew, scoped to the comparison scenario. See [ADR-0002](adr/0002-orchestration-framework.md).
 
 ### 4.3 Tools and protocols
-- External data sources are currently in-process, deterministic scenario fixtures (`providers.py`), so runs are reproducible and testable. The provider interface (`poll_disruptions`, `route_options`) is the contract the planned **MCP servers** will expose; wrapping them is the next milestone.
+- The data feeds are available through two interchangeable implementations of the `Feed` protocol (`feeds.py`): **LocalFeed** (in-process fixtures, default for tests/CI) and **MCPFeed**, which consumes the project's **MCP server** (`mcp_server.py`, FastMCP over stdio) exposing `active_routes`, `poll_disruptions`, and `route_options` as tools. `build_graph(feed=...)` selects the source; the simulation CLI switches with `--mcp`. Integration tests spawn the real server and assert feed equivalence.
+- MCPFeed currently opens one stdio session per tool call, which is simple and adequate for the orchestrator's call volume; a long-lived session is the documented optimization path.
 - **A2A** is noted as the direction for inter-agent messaging; not yet integrated.
 
 ## 5. State and persistence
@@ -107,5 +108,6 @@ A written benchmark of LangGraph vs CrewAI on the identical workflow, covering: 
 
 | Date | Version | Change | Author |
 |---|---|---|---|
+| 2026-07-07 | 0.3.0 | MCP integration: FastMCP stdio server exposing the feeds as tools, `Feed` protocol with LocalFeed/MCPFeed, `build_graph(feed=...)`, `--mcp` CLI flag, subprocess-based integration tests (19 total). | Vijay Ananth Karunanithi |
 | 2026-07-07 | 0.2.0 | Core orchestrator implemented: LangGraph graph with structural approval gate (`interrupt`/`Command(resume)`), SQLite checkpointing, deterministic scenario providers, dual-mode communicator, action guardrails, simulation CLI, 16-test suite. CrewAI moved to the `compare` extra. | Vijay Ananth Karunanithi |
 | 2026-07-07 | 0.1.0 | Initial technical documentation (pre-implementation). | Vijay Ananth Karunanithi |

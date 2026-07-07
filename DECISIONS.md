@@ -4,6 +4,8 @@ Running log, newest first. Non-obvious trade-offs get a full record under [docs/
 
 | Date | Decision | Notes |
 |---|---|---|
+| 2026-07-07 | Feeds behind a protocol, MCP as one transport | `Feed` protocol with LocalFeed (in-process, tests) and MCPFeed (stdio). The graph doesn't know which it got; the tool surface is the contract. |
+| 2026-07-07 | MCPFeed opens a session per tool call | Simple, avoids async state inside sync graph nodes, fine for a handful of calls per run. Long-lived session is the optimization path if call volume grows. |
 | 2026-07-07 | Approval gate is structural, not prompted | The >15% override pauses via a graph interrupt; the communicator is unreachable without a resume decision. An agent can't talk its way past an edge. |
 | 2026-07-07 | Dual-mode communicator | Deterministic template by default (tests/CI run without keys); LLM redraft when OPENAI_API_KEY is set. Both modes hit the same guardrails. |
 | 2026-07-07 | Supervisor as routing functions, not an LLM agent | The routing decisions here are rule-shaped (disruptions? threshold?). Using an LLM to pick edges would add cost and nondeterminism for nothing. |

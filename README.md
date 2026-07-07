@@ -46,7 +46,7 @@ In progress, built in the open.
 - [x] SQLite checkpointing and human-in-the-loop resume
 - [x] Action guardrails
 - [x] Simulation CLI (pause/resume approval flow)
-- [ ] MCP tool servers (weather, news, logistics)
+- [x] MCP tool server for the data feeds (run any scenario with `--mcp`)
 - [ ] CrewAI re-implementation
 - [ ] Written LangGraph vs CrewAI benchmark
 - [ ] Observability wiring (LangSmith/Langfuse)

@@ -7,8 +7,8 @@ guardrail validation, which is the point: the safety layer doesn't care who
 wrote the text.
 """
 
-from supplyagents import providers
 from supplyagents.config import get_settings
+from supplyagents.feeds import Feed, LocalFeed
 from supplyagents.guardrails import (
     check_action,
     requires_human_approval,
@@ -17,24 +17,25 @@ from supplyagents.guardrails import (
 from supplyagents.state import OrchestratorState, Route, RouteOption
 
 
-def monitor(state: OrchestratorState) -> dict:
+def monitor(state: OrchestratorState, *, feed: Feed | None = None) -> dict:
     """Poll external feeds for disruptions on the active routes."""
     check_action("monitor.poll")
+    feed = feed or LocalFeed()
     scenario = state["scenario"]
-    disruptions = providers.poll_disruptions(scenario)
+    disruptions = feed.poll_disruptions(scenario)
     if not disruptions:
         event = f"monitor: polled scenario {scenario!r}, no disruptions on active routes"
     else:
         summary = "; ".join(f"{d['route_id']} {d['kind']} ({d['severity']})" for d in disruptions)
         event = f"monitor: detected {summary}"
     return {
-        "routes": providers.ACTIVE_ROUTES,
+        "routes": feed.active_routes(),
         "disruptions": disruptions,
         "events": [event],
     }
 
 
-def optimizer(state: OrchestratorState) -> dict:
+def optimizer(state: OrchestratorState, *, feed: Feed | None = None) -> dict:
     """Price the replanning options and recommend one.
 
     Recommendation rule: cheapest option whose ETA impact stays under 72 hours;
@@ -42,7 +43,8 @@ def optimizer(state: OrchestratorState) -> dict:
     the interesting part is what happens to the recommendation downstream.
     """
     check_action("optimizer.propose")
-    options = providers.route_options(state["scenario"])
+    feed = feed or LocalFeed()
+    options = feed.route_options(state["scenario"])
     if not options:
         return {"options": [], "chosen_option": None, "needs_approval": False, "events": []}
 

@@ -13,10 +13,13 @@ agent cannot talk its way past the gate because the gate is an edge, not a
 prompt.
 """
 
+from functools import partial
+
 from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.graph import END, START, StateGraph
 from langgraph.types import interrupt
 
+from supplyagents.feeds import Feed
 from supplyagents.nodes import communicator, monitor, optimizer
 from supplyagents.state import OrchestratorState
 
@@ -56,11 +59,15 @@ def _route_after_optimizer(state: OrchestratorState) -> str:
     return "human_approval" if state["needs_approval"] else "communicator"
 
 
-def build_graph(checkpointer: BaseCheckpointSaver | None = None):
-    """Compile the orchestrator. A checkpointer is required for pause/resume."""
+def build_graph(checkpointer: BaseCheckpointSaver | None = None, feed: Feed | None = None):
+    """Compile the orchestrator.
+
+    A checkpointer is required for pause/resume. `feed` selects the data
+    source (in-process LocalFeed by default, MCPFeed for the MCP path).
+    """
     builder = StateGraph(OrchestratorState)
-    builder.add_node("monitor", monitor)
-    builder.add_node("optimizer", optimizer)
+    builder.add_node("monitor", partial(monitor, feed=feed))
+    builder.add_node("optimizer", partial(optimizer, feed=feed))
     builder.add_node("human_approval", human_approval)
     builder.add_node("communicator", communicator)
 
