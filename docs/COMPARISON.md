@@ -35,7 +35,7 @@ Line counts are honest but almost beside the point: the volume is similar. Where
 
 ## Runtime numbers
 
-Requires `OPENAI_API_KEY` in `.env` so both sides use a real model (the LangGraph side then uses its LLM communicator; the CrewAI side always does):
+Requires a model key in `.env` so both sides use a real model (the LangGraph side then uses its LLM communicator; the CrewAI side always does). Any OpenAI-compatible provider works, including the free tiers of Groq and Google AI Studio; `.env.example` shows the three-line config for each:
 
 ```bash
 uv sync --extra compare

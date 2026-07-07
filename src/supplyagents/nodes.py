@@ -150,7 +150,13 @@ def _redraft_with_llm(template_draft: str, route: Route) -> str:
     """
     from langchain_openai import ChatOpenAI
 
-    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.3)
+    settings = get_settings()
+    llm = ChatOpenAI(
+        model=settings.llm_model,
+        temperature=0.3,
+        api_key=settings.openai_api_key,
+        base_url=settings.openai_base_url or None,
+    )
     prompt = (
         "Rewrite the following logistics notification so it reads naturally for a "
         f"{route['customer_segment']} customer. Keep every fact, figure, and the route id "

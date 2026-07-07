@@ -7,7 +7,7 @@
 | **Status** | In development, orchestrator + MCP feeds + observability + framework comparison implemented |
 | **Owner** | Vijay Ananth Karunanithi |
 | **Last updated** | 2026-07-07 |
-| **Version** | 0.5.0 |
+| **Version** | 0.5.1 |
 
 ---
 
@@ -111,6 +111,7 @@ Two layers (`observability.py`):
 
 | Date | Version | Change | Author |
 |---|---|---|---|
+| 2026-07-07 | 0.5.1 | LLM provider made configurable (`LLM_MODEL`, `OPENAI_BASE_URL`): any OpenAI-compatible endpoint works on both implementations, including Groq and Google AI Studio free tiers. | Vijay Ananth Karunanithi |
 | 2026-07-07 | 0.5.0 | Framework comparison: CrewAI implementation of the workflow (two-phase kickoff, code-level gate), benchmark script, COMPARISON.md with structural findings and verdict; runtime table pending API key (28 tests). | Vijay Ananth Karunanithi |
 | 2026-07-07 | 0.4.0 | Observability layer: always-on per-node RunTimer callback, opt-in Langfuse/LangSmith export via env keys, tracing status in the CLI header, timings report per run (24 tests). | Vijay Ananth Karunanithi |
 | 2026-07-07 | 0.3.0 | MCP integration: FastMCP stdio server exposing the feeds as tools, `Feed` protocol with LocalFeed/MCPFeed, `build_graph(feed=...)`, `--mcp` CLI flag, subprocess-based integration tests (19 total). | Vijay Ananth Karunanithi |

@@ -22,7 +22,7 @@ import json
 import time
 from dataclasses import dataclass, field
 
-from crewai import Agent, Crew, Process, Task
+from crewai import LLM, Agent, Crew, Process, Task
 from crewai.tools import tool
 from pydantic import BaseModel
 
@@ -30,9 +30,17 @@ from supplyagents.config import get_settings
 from supplyagents.feeds import LocalFeed
 from supplyagents.guardrails import validate_customer_message
 
-_MODEL = "gpt-4o-mini"
-
 _feed = LocalFeed()
+
+
+def _build_llm() -> LLM:
+    """LLM from settings: OpenAI by default, any compatible endpoint otherwise."""
+    settings = get_settings()
+    return LLM(
+        model=f"openai/{settings.llm_model}",
+        api_key=settings.openai_api_key or None,
+        base_url=settings.openai_base_url or None,
+    )
 
 
 # --- tools (same data the LangGraph nodes see) -------------------------------
@@ -73,6 +81,7 @@ class Recommendation(BaseModel):
 
 def build_assessment_crew() -> Crew:
     """Phase 1: detect the disruption and recommend a replanning option."""
+    llm = _build_llm()
     monitor = Agent(
         role="Logistics Monitor",
         goal="Detect disruptions affecting the active shipping routes.",
@@ -81,7 +90,7 @@ def build_assessment_crew() -> Crew:
             "and report disruptions factually, without speculation."
         ),
         tools=[get_active_routes, poll_disruptions],
-        llm=_MODEL,
+        llm=llm,
         verbose=False,
     )
     optimizer = Agent(
@@ -93,7 +102,7 @@ def build_assessment_crew() -> Crew:
             "qualifies, the cheapest overall."
         ),
         tools=[get_route_options],
-        llm=_MODEL,
+        llm=llm,
         verbose=False,
     )
     detect = Task(
@@ -126,6 +135,7 @@ def build_assessment_crew() -> Crew:
 
 def build_communication_crew() -> Crew:
     """Phase 2: draft the customer notification for the decided plan."""
+    llm = _build_llm()
     communicator = Agent(
         role="Customer Communicator",
         goal="Draft clear, honest customer notifications about shipment changes.",
@@ -134,7 +144,7 @@ def build_communication_crew() -> Crew:
             "customers get a formal tone, SMB customers a friendly one. You never "
             "reveal internal costs or margins and never promise what is not decided."
         ),
-        llm=_MODEL,
+        llm=llm,
         verbose=False,
     )
     draft = Task(

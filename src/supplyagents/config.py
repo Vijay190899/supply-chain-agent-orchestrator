@@ -6,8 +6,12 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-    # Provider
+    # LLM provider. Any OpenAI-compatible endpoint works: leave base_url empty
+    # for OpenAI itself, or point it at Groq / Gemini's compatible endpoints
+    # (see .env.example) with the matching key and model name.
     openai_api_key: str = ""
+    openai_base_url: str = ""
+    llm_model: str = "gpt-4o-mini"
 
     # Tracing
     langsmith_api_key: str = ""

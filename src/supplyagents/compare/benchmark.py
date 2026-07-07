@@ -89,7 +89,8 @@ def main() -> None:
     if not get_settings().openai_api_key:
         raise SystemExit(
             "OPENAI_API_KEY is not set. The benchmark needs a real model on both "
-            "sides to produce honest numbers. Add the key to .env and rerun."
+            "sides to produce honest numbers. Any OpenAI-compatible provider works; "
+            ".env.example lists free-tier options (Groq, Google AI Studio)."
         )
 
     print(f"scenario: {args.scenario}, runs per side: {args.runs}\n")
