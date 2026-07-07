@@ -1,0 +1,41 @@
+[project]
+name = "supplyagents"
+version = "0.1.0"
+description = "A multi-agent logistics orchestrator (LangGraph, with a CrewAI comparison) for supply-chain disruption response."
+readme = "README.md"
+requires-python = ">=3.12"
+license = { file = "LICENSE" }
+authors = [{ name = "Vijay Ananth Karunanithi" }]
+dependencies = [
+    "langgraph>=0.2.50",
+    "langchain>=0.3",
+    "crewai>=0.80",
+    "pydantic>=2.9",
+    "pydantic-settings>=2.6",
+    "httpx>=0.27",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3",
+    "ruff>=0.7",
+    "pre-commit>=4.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/supplyagents"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
