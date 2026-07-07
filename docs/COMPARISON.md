@@ -44,12 +44,14 @@ make compare
 
 | Implementation | Wall time | LLM requests | Total tokens |
 |---|---|---|---|
-| LangGraph | pending | pending | pending |
-| CrewAI | pending | pending | pending |
+| LangGraph | 0.89 s (min 0.52, max 1.58) | 1.0 | 306 |
+| CrewAI | 2.14 s (min 2.08, max 2.19) | 9.7 | 6484 |
 
-(Method: `supplyagents/compare/benchmark.py`, default 3 runs per side on `suez-blockage`, override approved. The script prints this table ready to paste.)
+(Method: `supplyagents/compare/benchmark.py`, 3 runs per side on `suez-blockage` with the override approved. Measured 2026-07-07, both sides on `llama-3.3-70b-versatile` via Groq, so the model is held constant and the difference is pure framework overhead.)
 
-Expectation before measuring, for the record: CrewAI should show several times the requests and tokens (two crews, every step reasoned) and correspondingly higher wall time; LangGraph should sit near a single LLM call. If the numbers say otherwise, that finding goes here unedited.
+Expectation before measuring, for the record: CrewAI should show several times the requests and tokens (two crews, every step reasoned) and correspondingly higher wall time; LangGraph should sit near a single LLM call. The measurement confirmed it: roughly 10x the requests, 21x the tokens, and 2.4x the wall time for the identical business outcome.
+
+One incident from the first benchmark attempt is worth recording. The shared guardrail rejected the crew's first drafted message for exceeding the 1200-character cap (1508 chars), while the LangGraph side's template-derived messages sat around 700. The fix on the CrewAI side could only be prompt-side ("keep it under 150 words"), whereas the LangGraph path constrains message shape in code. That is finding 2 playing out live: prose-defined behavior drifts until a hard boundary catches it, so the hard boundary has to exist.
 
 ## Verdict
 

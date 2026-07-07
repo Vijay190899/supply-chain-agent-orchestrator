@@ -7,7 +7,7 @@
 | **Status** | In development, orchestrator + MCP feeds + observability + framework comparison implemented |
 | **Owner** | Vijay Ananth Karunanithi |
 | **Last updated** | 2026-07-07 |
-| **Version** | 0.5.1 |
+| **Version** | 0.5.2 |
 
 ---
 
@@ -82,7 +82,7 @@ flowchart TD
 
 ## 8. Framework comparison (deliverable)
 
-Implemented. The CrewAI version (`compare/crew.py`, behind the `compare` extra) mirrors the workflow with the approval gate as plain Python between two `kickoff()` calls, since CrewAI has no durable pause/resume. Structural findings, methodology, and the verdict are in [COMPARISON.md](COMPARISON.md); the runtime table is produced by `compare/benchmark.py` (`make compare`, requires `OPENAI_API_KEY`). Both implementations share the feeds and the guardrails module, so measured differences are framework differences.
+Implemented and measured. The CrewAI version (`compare/crew.py`, behind the `compare` extra) mirrors the workflow with the approval gate as plain Python between two `kickoff()` calls, since CrewAI has no durable pause/resume. Both implementations share the feeds and the guardrails module, so measured differences are framework differences. Runtime results (3 runs per side, same model, `llama-3.3-70b-versatile` via Groq): LangGraph 0.89 s / 1 LLM request / ~306 tokens per run; CrewAI 2.14 s / ~10 requests / ~6,500 tokens. Full findings, methodology, and verdict in [COMPARISON.md](COMPARISON.md).
 
 ## 9. Deployment and infrastructure
 
@@ -111,6 +111,7 @@ Two layers (`observability.py`):
 
 | Date | Version | Change | Author |
 |---|---|---|---|
+| 2026-07-07 | 0.5.2 | Benchmark executed on Groq (`llama-3.3-70b-versatile`): runtime table filled in COMPARISON.md. CrewAI fixes surfaced by live runs: native-provider model name (no prefix), valid tool schema for strict providers, prompt-side length constraint after a live guardrail rejection. | Vijay Ananth Karunanithi |
 | 2026-07-07 | 0.5.1 | LLM provider made configurable (`LLM_MODEL`, `OPENAI_BASE_URL`): any OpenAI-compatible endpoint works on both implementations, including Groq and Google AI Studio free tiers. | Vijay Ananth Karunanithi |
 | 2026-07-07 | 0.5.0 | Framework comparison: CrewAI implementation of the workflow (two-phase kickoff, code-level gate), benchmark script, COMPARISON.md with structural findings and verdict; runtime table pending API key (28 tests). | Vijay Ananth Karunanithi |
 | 2026-07-07 | 0.4.0 | Observability layer: always-on per-node RunTimer callback, opt-in Langfuse/LangSmith export via env keys, tracing status in the CLI header, timings report per run (24 tests). | Vijay Ananth Karunanithi |

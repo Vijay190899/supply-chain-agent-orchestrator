@@ -44,7 +44,10 @@ def test_recommendation_schema_matches_option_shape():
 
 
 @pytest.mark.skipif(not os.getenv("OPENAI_API_KEY"), reason="needs OPENAI_API_KEY")
-def test_workflow_executes_end_to_end():
+def test_workflow_executes_end_to_end(monkeypatch, real_openai_key):
+    # conftest blanks the key for determinism; this live test explicitly
+    # opts back in with the real one.
+    monkeypatch.setenv("OPENAI_API_KEY", real_openai_key)
     result = run_workflow("suez-blockage", decision="approved")
     assert result.needs_approval is True
     assert result.approval_decision == "approved"

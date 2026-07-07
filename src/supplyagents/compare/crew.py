@@ -34,11 +34,19 @@ _feed = LocalFeed()
 
 
 def _build_llm() -> LLM:
-    """LLM from settings: OpenAI by default, any compatible endpoint otherwise."""
+    """LLM from settings: OpenAI by default, any compatible endpoint otherwise.
+
+    No provider prefix on the model name: CrewAI's native OpenAI provider
+    handles compatible endpoints (Groq, Gemini) via base_url.
+    """
     settings = get_settings()
     return LLM(
-        model=f"openai/{settings.llm_model}",
-        api_key=settings.openai_api_key or None,
+        model=settings.llm_model,
+        # CrewAI's native provider refuses to construct without a key; a
+        # placeholder keeps keyless construction (wiring tests, CI) working.
+        # Any real call with it would fail with 401, which is the honest
+        # outcome for an unconfigured environment.
+        api_key=settings.openai_api_key or "not-configured",
         base_url=settings.openai_base_url or None,
     )
 
@@ -47,9 +55,17 @@ def _build_llm() -> LLM:
 
 
 @tool("get_active_routes")
-def get_active_routes() -> str:
-    """List the active shipping routes under management, as JSON."""
-    return json.dumps(_feed.active_routes())
+def get_active_routes(mode: str = "all") -> str:
+    """List the active shipping routes under management, as JSON.
+
+    `mode` filters by transport mode (sea, road, rail, air); "all" returns
+    every route. The parameter also keeps the tool schema valid for strict
+    OpenAI-compatible providers, which reject parameterless tool schemas.
+    """
+    routes = _feed.active_routes()
+    if mode != "all":
+        routes = [r for r in routes if r["mode"] == mode]
+    return json.dumps(routes)
 
 
 @tool("poll_disruptions")
@@ -152,7 +168,9 @@ def build_communication_crew() -> Crew:
             "Draft a notification for the customer on route {route_id} "
             "({segment} segment). Situation: {situation}. Decided plan: {plan}. "
             "The message must mention the route id {route_id} exactly and must "
-            "not mention internal costs, margins, or approval thresholds."
+            "not mention internal costs, margins, or approval thresholds. "
+            "Keep the whole message under 150 words; a runtime guardrail "
+            "rejects anything longer than 1200 characters."
         ),
         expected_output="The customer-ready notification text, subject line included.",
         agent=communicator,
