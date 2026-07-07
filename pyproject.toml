@@ -1,6 +1,6 @@
 [project]
 name = "supplyagents"
-version = "0.3.0"
+version = "0.4.0"
 description = "A multi-agent logistics orchestrator (LangGraph, with a CrewAI comparison) for supply-chain disruption response."
 readme = "README.md"
 requires-python = ">=3.12"
@@ -11,6 +11,7 @@ dependencies = [
     "langgraph-checkpoint-sqlite>=2.0",
     "langchain-openai>=0.3",
     "mcp>=1.9",
+    "langfuse>=3.0",
     "pydantic>=2.9",
     "pydantic-settings>=2.6",
     "httpx>=0.27",

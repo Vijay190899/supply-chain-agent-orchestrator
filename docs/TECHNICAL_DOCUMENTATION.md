@@ -4,10 +4,10 @@
 
 | | |
 |---|---|
-| **Status** | In development, core orchestrator and MCP feeds implemented |
+| **Status** | In development, orchestrator + MCP feeds + observability implemented |
 | **Owner** | Vijay Ananth Karunanithi |
 | **Last updated** | 2026-07-07 |
-| **Version** | 0.3.0 |
+| **Version** | 0.4.0 |
 
 ---
 
@@ -92,7 +92,10 @@ A written benchmark of LangGraph vs CrewAI on the identical workflow, covering: 
 
 ## 10. Observability
 
-- **LangSmith / Langfuse** tracing: per-agent decision path, latency, and token cost per run.
+Two layers (`observability.py`):
+
+- **Local timings, always on:** `RunTimer` is a LangChain callback measuring wall time per graph node. It needs no keys or network, runs in every simulation and in CI, and the CLI prints the per-node report after each run.
+- **Exporters, opt-in:** `tracing_callbacks(settings)` enables **Langfuse** (callback handler) and/or **LangSmith** (environment propagation) only when their keys are present. `enabled_exporters` is pure decision logic and unit-tested; the CLI header states which exporters are active or that tracing is off.
 
 ## 11. Build roadmap
 
@@ -108,6 +111,7 @@ A written benchmark of LangGraph vs CrewAI on the identical workflow, covering: 
 
 | Date | Version | Change | Author |
 |---|---|---|---|
+| 2026-07-07 | 0.4.0 | Observability layer: always-on per-node RunTimer callback, opt-in Langfuse/LangSmith export via env keys, tracing status in the CLI header, timings report per run (24 tests). | Vijay Ananth Karunanithi |
 | 2026-07-07 | 0.3.0 | MCP integration: FastMCP stdio server exposing the feeds as tools, `Feed` protocol with LocalFeed/MCPFeed, `build_graph(feed=...)`, `--mcp` CLI flag, subprocess-based integration tests (19 total). | Vijay Ananth Karunanithi |
 | 2026-07-07 | 0.2.0 | Core orchestrator implemented: LangGraph graph with structural approval gate (`interrupt`/`Command(resume)`), SQLite checkpointing, deterministic scenario providers, dual-mode communicator, action guardrails, simulation CLI, 16-test suite. CrewAI moved to the `compare` extra. | Vijay Ananth Karunanithi |
 | 2026-07-07 | 0.1.0 | Initial technical documentation (pre-implementation). | Vijay Ananth Karunanithi |

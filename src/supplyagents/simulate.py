@@ -22,6 +22,7 @@ from supplyagents import providers
 from supplyagents.config import get_settings
 from supplyagents.feeds import MCPFeed
 from supplyagents.graph import build_graph
+from supplyagents.observability import RunTimer, tracing_callbacks
 
 
 def main() -> None:
@@ -62,12 +63,14 @@ def main() -> None:
 
     settings = get_settings()
     thread_id = args.thread or f"sim-{uuid.uuid4().hex[:8]}"
-    config = {"configurable": {"thread_id": thread_id}}
+    callbacks, exporters = tracing_callbacks(settings)
+    config = {"configurable": {"thread_id": thread_id}, "callbacks": callbacks}
     feed = MCPFeed() if args.mcp else None
 
     print(f"scenario : {args.scenario}")
     print(f"thread   : {thread_id}")
     print(f"feeds    : {'MCP server (stdio)' if args.mcp else 'in-process'}")
+    print(f"tracing  : {' + '.join(exporters) if exporters else 'off (local timings only)'}")
     print(f"threshold: {settings.human_approval_threshold:.0%} cost override\n")
 
     with SqliteSaver.from_conn_string(settings.checkpoint_db) as saver:
@@ -89,6 +92,11 @@ def main() -> None:
     print("-- event log --")
     for event in result.get("events", []):
         print(f"   {event}")
+
+    timer = next(cb for cb in callbacks if isinstance(cb, RunTimer))
+    print("\n-- node timings --")
+    for line in timer.report().splitlines():
+        print(f"   {line}")
 
     message = result.get("customer_message")
     if message:

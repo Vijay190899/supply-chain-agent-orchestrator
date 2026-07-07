@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     langsmith_tracing: bool = False
     langfuse_public_key: str = ""
     langfuse_secret_key: str = ""
+    langfuse_host: str = "https://cloud.langfuse.com"
 
     # External data (blank -> mock providers)
     weather_api_key: str = ""

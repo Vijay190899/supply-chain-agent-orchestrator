@@ -49,7 +49,7 @@ In progress, built in the open.
 - [x] MCP tool server for the data feeds (run any scenario with `--mcp`)
 - [ ] CrewAI re-implementation
 - [ ] Written LangGraph vs CrewAI benchmark
-- [ ] Observability wiring (LangSmith/Langfuse)
+- [x] Observability: per-node timings always on, Langfuse/LangSmith export when keys are set
 - [ ] GCP deploy
 
 Decisions are logged in [DECISIONS.md](DECISIONS.md).
