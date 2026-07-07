@@ -10,5 +10,5 @@ def test_version_is_set():
 
 def test_approval_threshold_default():
     settings = get_settings()
-    # The 15% human-in-the-loop rule is a core requirement — pin it.
+    # The 15% human-in-the-loop rule is a core requirement, so pin it.
     assert settings.human_approval_threshold == 0.15

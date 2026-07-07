@@ -1,10 +1,10 @@
-# Supply-chain Agent Orchestrator — Technical Documentation
+# Supply-chain Agent Orchestrator: Technical Documentation
 
 > **Living document.** This is the authoritative technical reference for the system. It **must** be updated in the same change set as any modification that alters the architecture, adds or removes an agent or component, changes an interface or state schema, changes the persistence model, or changes the deployment topology. Record every such change in the [Revision history](#12-revision-history).
 
 | | |
 |---|---|
-| **Status** | Draft — pre-implementation |
+| **Status** | Draft, pre-implementation |
 | **Owner** | Vijay Ananth Karunanithi |
 | **Last updated** | 2026-07-07 |
 | **Version** | 0.1.0 |
@@ -49,10 +49,10 @@ flowchart TD
 ## 4. Component design
 
 ### 4.1 Agents
-- **Monitor** — polls external APIs (exposed as MCP servers) for signals affecting active routes.
-- **Optimizer** — recomputes candidate paths and dynamic freight pricing on a detected change.
-- **Communicator** — drafts a customer notification, adapting tone to the customer segment. Output is validated; sending is out of scope and gated.
-- **Supervisor** — directs control flow from shared state and triggers the human-approval interrupt.
+- **Monitor**: polls external APIs (exposed as MCP servers) for signals affecting active routes.
+- **Optimizer**: recomputes candidate paths and dynamic freight pricing on a detected change.
+- **Communicator**: drafts a customer notification, adapting tone to the customer segment. Output is validated; sending is out of scope and gated.
+- **Supervisor**: directs control flow from shared state and triggers the human-approval interrupt.
 
 ### 4.2 Orchestration frameworks
 - **LangGraph (production):** explicit stateful graph with cycles, checkpointing, and interrupts. Chosen because durable, cyclic, human-in-the-loop control flow is its core competency.
@@ -86,8 +86,8 @@ A written benchmark of LangGraph vs CrewAI on the identical workflow, covering: 
 ## 9. Deployment and infrastructure
 
 - **Local:** Docker.
-- **Cloud:** GCP — Cloud Run, or GKE for the stateful supervisor; checkpoint store migrated to Cloud SQL.
-- **CI/CD:** GitHub Actions — lint and test.
+- **Cloud:** GCP. Cloud Run, or GKE for the stateful supervisor; checkpoint store migrated to Cloud SQL.
+- **CI/CD:** GitHub Actions for lint and test.
 
 ## 10. Observability
 
