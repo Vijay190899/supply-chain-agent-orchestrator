@@ -42,13 +42,15 @@ See [docs/STACK.md](docs/STACK.md); architecture and design in [docs/TECHNICAL_D
 
 In progress, built in the open.
 
-- [ ] LangGraph orchestrator and supervisor routing
-- [ ] SQLite checkpointing and human-in-the-loop resume
+- [x] LangGraph orchestrator and supervisor routing
+- [x] SQLite checkpointing and human-in-the-loop resume
+- [x] Action guardrails
+- [x] Simulation CLI (pause/resume approval flow)
 - [ ] MCP tool servers (weather, news, logistics)
-- [ ] Action guardrails
 - [ ] CrewAI re-implementation
 - [ ] Written LangGraph vs CrewAI benchmark
-- [ ] Simulation CLI and GCP deploy
+- [ ] Observability wiring (LangSmith/Langfuse)
+- [ ] GCP deploy
 
 Decisions are logged in [DECISIONS.md](DECISIONS.md).
 

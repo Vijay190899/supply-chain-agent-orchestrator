@@ -4,10 +4,10 @@
 
 | | |
 |---|---|
-| **Status** | Draft, pre-implementation |
+| **Status** | In development, core orchestrator implemented |
 | **Owner** | Vijay Ananth Karunanithi |
 | **Last updated** | 2026-07-07 |
-| **Version** | 0.1.0 |
+| **Version** | 0.2.0 |
 
 ---
 
@@ -49,23 +49,23 @@ flowchart TD
 ## 4. Component design
 
 ### 4.1 Agents
-- **Monitor**: polls external APIs (exposed as MCP servers) for signals affecting active routes.
-- **Optimizer**: recomputes candidate paths and dynamic freight pricing on a detected change.
-- **Communicator**: drafts a customer notification, adapting tone to the customer segment. Output is validated; sending is out of scope and gated.
-- **Supervisor**: directs control flow from shared state and triggers the human-approval interrupt.
+- **Monitor** (`nodes.monitor`): polls the disruption feeds for signals affecting active routes.
+- **Optimizer** (`nodes.optimizer`): prices candidate replanning options and recommends one. Current rule: cheapest option whose ETA impact stays under 72 hours, falling back to cheapest overall. Sets `needs_approval` when the recommendation's cost delta exceeds the threshold.
+- **Communicator** (`nodes.communicator`): drafts a customer notification, adapting tone to the customer segment (enterprise or SMB). Two modes: a deterministic template (no API key, used in tests/CI) and an LLM redraft of that template when `OPENAI_API_KEY` is set. Both modes pass through the same guardrail validation. Sending is not allowlisted; the node only drafts.
+- **Supervisor**: implemented as the graph's conditional routing (`graph._route_after_monitor`, `graph._route_after_optimizer`) plus the `human_approval` interrupt node, rather than as an LLM agent. The approval gate is structural: a run whose cost override exceeds the threshold cannot reach the communicator without a resume decision.
 
 ### 4.2 Orchestration frameworks
 - **LangGraph (production):** explicit stateful graph with cycles, checkpointing, and interrupts. Chosen because durable, cyclic, human-in-the-loop control flow is its core competency.
 - **CrewAI (comparison):** the same four-role workflow expressed as a crew, scoped to the comparison scenario. See [ADR-0002](adr/0002-orchestration-framework.md).
 
 ### 4.3 Tools and protocols
-- External data sources are **MCP servers**, making them reusable and swappable. Mock providers are used when API keys are absent.
+- External data sources are currently in-process, deterministic scenario fixtures (`providers.py`), so runs are reproducible and testable. The provider interface (`poll_disruptions`, `route_options`) is the contract the planned **MCP servers** will expose; wrapping them is the next milestone.
 - **A2A** is noted as the direction for inter-agent messaging; not yet integrated.
 
 ## 5. State and persistence
 
-- **Checkpoint store:** SQLite (`orchestrator.sqlite`), holding the serialized graph state per thread to support pause/resume across a human-approval interrupt.
-- State schema includes: active routes, detected disruptions, candidate route/cost options, pending approvals, and message drafts. Schema changes require a revision-history entry.
+- **Checkpoint store:** SQLite (`orchestrator.sqlite`) via `langgraph-checkpoint-sqlite`, holding the serialized graph state per thread to support pause/resume across a human-approval interrupt. Tests use the in-memory saver.
+- **State schema** (`state.OrchestratorState`): scenario name, active routes, detected disruptions, candidate options with cost deltas (fractions of base cost), the chosen option, `needs_approval`, the approval decision, the drafted customer message, and an append-only `events` audit log. Schema changes require a revision-history entry.
 - Migration path to Postgres (Cloud SQL) documented under deployment.
 
 ## 6. Interface
@@ -107,4 +107,5 @@ A written benchmark of LangGraph vs CrewAI on the identical workflow, covering: 
 
 | Date | Version | Change | Author |
 |---|---|---|---|
+| 2026-07-07 | 0.2.0 | Core orchestrator implemented: LangGraph graph with structural approval gate (`interrupt`/`Command(resume)`), SQLite checkpointing, deterministic scenario providers, dual-mode communicator, action guardrails, simulation CLI, 16-test suite. CrewAI moved to the `compare` extra. | Vijay Ananth Karunanithi |
 | 2026-07-07 | 0.1.0 | Initial technical documentation (pre-implementation). | Vijay Ananth Karunanithi |
