@@ -50,7 +50,7 @@ In progress, built in the open.
 - [x] CrewAI re-implementation (two-phase kickoff around the approval gate, `compare` extra)
 - [x] Written LangGraph vs CrewAI comparison with measured runtime numbers: [docs/COMPARISON.md](docs/COMPARISON.md)
 - [x] Observability: per-node timings always on, Langfuse/LangSmith export when keys are set
-- [ ] GCP deploy
+- [x] GCP deploy: HTTP service on Cloud Run, one-command deploy + Terraform ([docs/DEPLOY.md](docs/DEPLOY.md))
 
 Decisions are logged in [DECISIONS.md](DECISIONS.md).
 
@@ -60,7 +60,18 @@ Decisions are logged in [DECISIONS.md](DECISIONS.md).
 make install
 cp .env.example .env  # fill in keys
 make test
-make run              # runs a simulated disruption scenario
+make run              # runs a simulated disruption scenario (CLI)
+make serve            # starts the HTTP service on http://localhost:8080
+```
+
+## Deploying
+
+The orchestrator also ships as an HTTP service (`supplyagents.service`) for
+Cloud Run. See [docs/DEPLOY.md](docs/DEPLOY.md) for the full walkthrough;
+short version, once `gcloud` is set up:
+
+```bash
+PROJECT_ID=<your-project> ./deploy/deploy.sh
 ```
 
 ## Licence

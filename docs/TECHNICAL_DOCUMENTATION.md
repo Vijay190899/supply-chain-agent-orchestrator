@@ -4,10 +4,10 @@
 
 | | |
 |---|---|
-| **Status** | In development, orchestrator + MCP feeds + observability + framework comparison implemented |
+| **Status** | In development, orchestrator + MCP feeds + observability + framework comparison + Cloud Run deploy implemented |
 | **Owner** | Vijay Ananth Karunanithi |
 | **Last updated** | 2026-07-07 |
-| **Version** | 0.5.2 |
+| **Version** | 0.6.0 |
 
 ---
 
@@ -95,7 +95,15 @@ Implemented and measured. The CrewAI version (`compare/crew.py`, behind the `com
 Two layers (`observability.py`):
 
 - **Local timings, always on:** `RunTimer` is a LangChain callback measuring wall time per graph node. It needs no keys or network, runs in every simulation and in CI, and the CLI prints the per-node report after each run.
-- **Exporters, opt-in:** `tracing_callbacks(settings)` enables **Langfuse** (callback handler) and/or **LangSmith** (environment propagation) only when their keys are present. `enabled_exporters` is pure decision logic and unit-tested; the CLI header states which exporters are active or that tracing is off.
+- **Exporters, opt-in:** `tracing_callbacks(settings)` enables **Langfuse** (callback handler) and/or **LangSmith** (environment propagation) only when their keys are present. `enabled_exporters` is pure decision logic and unit-tested; the CLI header states which exporters are active or that tracing is off. The Cloud Run service (below) uses the same path, so a deployed instance exports traces when Langfuse secrets are configured.
+
+## 10a. HTTP service and deployment
+
+`runner.run_scenario` is the single entry point both the CLI and the service call: it builds the graph, runs a scenario, and resolves the approval gate in one call by applying a supplied `decision` (approve/reject). `service.py` wraps it in a small FastAPI app: `GET /` (info + scenarios), `GET /healthz`, `POST /run`.
+
+The container (`Dockerfile`) serves this app with uvicorn on `$PORT`. `deploy/deploy.sh` ships it to **Cloud Run** via `gcloud run deploy --source` (Cloud Build, no local Docker), scaling to zero when idle. `deploy/terraform/` expresses the same service as IaC. Full walkthrough in [DEPLOY.md](DEPLOY.md).
+
+Scope note: resolving the approval gate within one request keeps the service stateless, so it runs on a single free-tier Cloud Run instance. The durable cross-request pause/resume remains a local feature (SQLite); in the cloud it would need a shared store (Cloud SQL), deliberately out of scope for the demo.
 
 ## 11. Build roadmap
 
@@ -111,6 +119,7 @@ Two layers (`observability.py`):
 
 | Date | Version | Change | Author |
 |---|---|---|---|
+| 2026-07-07 | 0.6.0 | Cloud Run deployment: FastAPI service (`service.py`) over a shared `runner.run_scenario`, container serves on `$PORT`, one-command `deploy/deploy.sh` (Cloud Build) plus Terraform IaC, DEPLOY.md runbook. Runner attaches tracing so deployed runs export to Langfuse. Service tests added (31 passed). | Vijay Ananth Karunanithi |
 | 2026-07-07 | 0.5.2 | Benchmark executed on Groq (`llama-3.3-70b-versatile`): runtime table filled in COMPARISON.md. CrewAI fixes surfaced by live runs: native-provider model name (no prefix), valid tool schema for strict providers, prompt-side length constraint after a live guardrail rejection. | Vijay Ananth Karunanithi |
 | 2026-07-07 | 0.5.1 | LLM provider made configurable (`LLM_MODEL`, `OPENAI_BASE_URL`): any OpenAI-compatible endpoint works on both implementations, including Groq and Google AI Studio free tiers. | Vijay Ananth Karunanithi |
 | 2026-07-07 | 0.5.0 | Framework comparison: CrewAI implementation of the workflow (two-phase kickoff, code-level gate), benchmark script, COMPARISON.md with structural findings and verdict; runtime table pending API key (28 tests). | Vijay Ananth Karunanithi |

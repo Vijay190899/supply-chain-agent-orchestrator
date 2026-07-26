@@ -4,6 +4,8 @@ Running log, newest first. Non-obvious trade-offs get a full record under [docs/
 
 | Date | Decision | Notes |
 |---|---|---|
+| 2026-07-07 | Service resolves the approval gate in one request | Passing decision (approve/reject) with the request keeps Cloud Run stateless and free-tier friendly. Durable cross-request pause/resume stays a local SQLite feature; the cloud would need Cloud SQL. |
+| 2026-07-07 | Deploy via `gcloud run deploy --source` | Cloud Build builds the image, so no local Docker is needed and one command ships it. Terraform is provided as the IaC alternative. |
 | 2026-07-07 | CrewAI gate lives outside the crew | CrewAI can't park a half-finished run, so the threshold check sits in Python between two kickoffs. That asymmetry is itself the headline comparison finding. |
 | 2026-07-07 | Benchmark refuses to run without a key | No canned numbers: the runtime table stays "pending" until a real model runs both sides. Structural findings stand on their own. |
 | 2026-07-07 | Timings local and always on, exporters opt-in | A run should never lose its latency data because a key is missing, and CI should never need a tracing account. Langfuse/LangSmith switch on via env keys only. |

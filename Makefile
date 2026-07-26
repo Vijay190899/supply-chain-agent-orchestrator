@@ -5,7 +5,8 @@ help:
 	@echo "lint     - ruff check + format check"
 	@echo "format   - ruff format"
 	@echo "test     - run pytest"
-	@echo "run      - run a simulated disruption scenario"
+	@echo "run      - run a simulated disruption scenario (CLI)"
+	@echo "serve    - start the HTTP service on :8080"
 	@echo "docker   - build the container image"
 	@echo "compare  - benchmark LangGraph vs CrewAI (needs OPENAI_API_KEY + compare extra)"
 
@@ -24,6 +25,9 @@ test:
 
 run:
 	uv run python -m supplyagents.simulate
+
+serve:
+	uv run uvicorn supplyagents.service:app --reload --port 8080
 
 docker:
 	docker build -t supplyagents:local .
