@@ -73,18 +73,34 @@ gcloud run services update supply-chain-orchestrator --region "$REGION" \
   --update-env-vars=LANGFUSE_HOST=https://cloud.langfuse.com
 ```
 
-## Deploy the web UI (Vercel)
+## Deploy the web UI
 
-The dashboard in `web/` deploys to Vercel's free tier:
+### Option A: Cloud Run (everything on Google Cloud)
 
-1. Push the repo to GitHub (already done).
-2. On <https://vercel.com>, import the repo and set the **Root Directory** to `web`.
-3. Add an environment variable `NEXT_PUBLIC_API_URL` set to the Cloud Run URL
-   above (or leave it unset to ship the self-contained demo-mode build).
-4. Deploy. Vercel gives a public URL; every push redeploys.
+Deploy the dashboard as a second Cloud Run service. Deploy the backend first
+(above), then from the repo root:
 
-The backend's CORS is open, so the Vercel frontend can call the Cloud Run
-backend directly.
+```bash
+PROJECT_ID=<your-project-id> ./deploy/deploy-web.sh
+```
+
+The script builds the Next.js standalone image with Cloud Build (no local
+Docker), automatically finds the backend service URL and bakes it in so the UI
+runs in live mode, and deploys to Cloud Run. If no backend is found it builds in
+self-contained demo mode. It prints the public URL. To force a specific backend
+(or demo mode), pass `API_URL=...` (or `API_URL=` for demo).
+
+Result: two Cloud Run services, both scale-to-zero, both on the free tier.
+
+### Option B: Vercel (alternative)
+
+1. On <https://vercel.com>, import the repo and set the **Root Directory** to `web`.
+2. Add `NEXT_PUBLIC_API_URL` set to the Cloud Run backend URL (or leave it unset
+   for the demo-mode build).
+3. Deploy. Every push redeploys.
+
+Either way, the backend's CORS is open, so the frontend can call the backend
+directly.
 
 ## Infrastructure as code (alternative)
 

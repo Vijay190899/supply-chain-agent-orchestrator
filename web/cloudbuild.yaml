@@ -1,0 +1,22 @@
+# Build the frontend image, passing the backend URL as a build arg so the
+# NEXT_PUBLIC_API_URL is baked in. Invoked by deploy/deploy-web.sh.
+#
+# Substitutions:
+#   _IMAGE    fully-qualified Artifact Registry image tag
+#   _API_URL  backend URL, or empty for demo mode
+
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - --build-arg
+      - NEXT_PUBLIC_API_URL=${_API_URL}
+      - -t
+      - ${_IMAGE}
+      - .
+
+images:
+  - ${_IMAGE}
+
+options:
+  logging: CLOUD_LOGGING_ONLY

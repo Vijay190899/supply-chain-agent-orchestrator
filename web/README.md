@@ -36,10 +36,13 @@ npm run dev
 
 ## Deploy
 
-Vercel is the simplest host (free tier). Set the project root to `web/` and add
-the `NEXT_PUBLIC_API_URL` environment variable pointing at the deployed backend
-(or leave it unset to ship the demo-mode build). See the repo's
-[docs/DEPLOY.md](../docs/DEPLOY.md).
+Two options, both in [docs/DEPLOY.md](../docs/DEPLOY.md):
+
+- **Cloud Run (everything on Google Cloud):** `PROJECT_ID=... ./deploy/deploy-web.sh`
+  from the repo root. Builds the standalone image with Cloud Build, finds the
+  backend URL automatically, and deploys a second Cloud Run service.
+- **Vercel:** set the project root to `web/` and add `NEXT_PUBLIC_API_URL`
+  (or leave it unset for the demo-mode build).
 
 ## How it maps to the backend
 
