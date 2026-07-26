@@ -73,6 +73,19 @@ gcloud run services update supply-chain-orchestrator --region "$REGION" \
   --update-env-vars=LANGFUSE_HOST=https://cloud.langfuse.com
 ```
 
+## Deploy the web UI (Vercel)
+
+The dashboard in `web/` deploys to Vercel's free tier:
+
+1. Push the repo to GitHub (already done).
+2. On <https://vercel.com>, import the repo and set the **Root Directory** to `web`.
+3. Add an environment variable `NEXT_PUBLIC_API_URL` set to the Cloud Run URL
+   above (or leave it unset to ship the self-contained demo-mode build).
+4. Deploy. Vercel gives a public URL; every push redeploys.
+
+The backend's CORS is open, so the Vercel frontend can call the Cloud Run
+backend directly.
+
 ## Infrastructure as code (alternative)
 
 `deploy/terraform/` manages the same Cloud Run service declaratively. Build and

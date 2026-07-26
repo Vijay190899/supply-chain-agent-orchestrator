@@ -4,10 +4,10 @@
 
 | | |
 |---|---|
-| **Status** | In development, orchestrator + MCP feeds + observability + framework comparison + Cloud Run deploy implemented |
+| **Status** | In development, orchestrator + MCP feeds + observability + framework comparison + Cloud Run deploy + streaming web UI implemented |
 | **Owner** | Vijay Ananth Karunanithi |
-| **Last updated** | 2026-07-07 |
-| **Version** | 0.6.0 |
+| **Last updated** | 2026-07-27 |
+| **Version** | 0.7.0 |
 
 ---
 
@@ -105,6 +105,25 @@ The container (`Dockerfile`) serves this app with uvicorn on `$PORT`. `deploy/de
 
 Scope note: resolving the approval gate within one request keeps the service stateless, so it runs on a single free-tier Cloud Run instance. The durable cross-request pause/resume remains a local feature (SQLite); in the cloud it would need a shared store (Cloud SQL), deliberately out of scope for the demo.
 
+## 10b. Streaming and the web UI
+
+For the dashboard, `streaming.py` drives the graph with
+`graph.stream(..., stream_mode="updates")` and yields one NDJSON line per event
+(`run_started`, `node`, `await_approval`, `done`, `error`). Two endpoints back
+it: `POST /api/runs` streams until the approval gate, `POST /api/runs/resume`
+continues after a decision. A module-level checkpointer keeps the paused run
+alive between the two requests, so resume must reach the same process (fine on a
+single warm Cloud Run instance; a shared store is needed to scale out). CORS is
+open for the demo.
+
+The frontend lives in `web/` (Next.js, TypeScript, Tailwind, Framer Motion). It
+reads the NDJSON stream and animates a four-node agent pipeline, a live event
+log, an interactive approval modal (which calls the resume endpoint), and the
+drafted message with per-node timings. With no `NEXT_PUBLIC_API_URL` it runs in
+browser demo mode replaying canned scripts that mirror the backend fixtures, so
+the public link works even when the backend is asleep. The interactive flow is
+browser-verified (Playwright) end to end.
+
 ## 11. Build roadmap
 
 1. LangGraph orchestrator + supervisor routing.
@@ -119,6 +138,7 @@ Scope note: resolving the approval gate within one request keeps the service sta
 
 | Date | Version | Change | Author |
 |---|---|---|---|
+| 2026-07-27 | 0.7.0 | Streaming web UI: NDJSON streaming endpoints (`streaming.py`) via `graph.stream`, CORS; Next.js/TypeScript/Tailwind/Framer Motion dashboard in `web/` with animated agent pipeline, live log, interactive approval modal, timings, and a browser demo-mode fallback. Four streaming tests (35 passed, 1 skipped); interactive flow browser-verified. | Vijay Ananth Karunanithi |
 | 2026-07-07 | 0.6.0 | Cloud Run deployment: FastAPI service (`service.py`) over a shared `runner.run_scenario`, container serves on `$PORT`, one-command `deploy/deploy.sh` (Cloud Build) plus Terraform IaC, DEPLOY.md runbook. Runner attaches tracing so deployed runs export to Langfuse. Service tests added (31 passed). | Vijay Ananth Karunanithi |
 | 2026-07-07 | 0.5.2 | Benchmark executed on Groq (`llama-3.3-70b-versatile`): runtime table filled in COMPARISON.md. CrewAI fixes surfaced by live runs: native-provider model name (no prefix), valid tool schema for strict providers, prompt-side length constraint after a live guardrail rejection. | Vijay Ananth Karunanithi |
 | 2026-07-07 | 0.5.1 | LLM provider made configurable (`LLM_MODEL`, `OPENAI_BASE_URL`): any OpenAI-compatible endpoint works on both implementations, including Groq and Google AI Studio free tiers. | Vijay Ananth Karunanithi |

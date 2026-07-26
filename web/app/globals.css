@@ -1,0 +1,92 @@
+@import "tailwindcss";
+
+/* Dark, technical "ops console" theme. Committed to a single dark look on
+   purpose: this is a control surface, not a marketing page. */
+@theme {
+  --color-bg: #080b12;
+  --color-bg-grid: #0e1420;
+  --color-surface: #0f1623;
+  --color-surface-2: #141d2e;
+  --color-border: #24314a;
+  --color-border-bright: #37507a;
+  --color-text: #e7edf7;
+  --color-muted: #8494ac;
+  --color-faint: #566178;
+
+  /* Per-agent accents. These carry meaning but are always paired with an
+     icon and a label, never color alone. */
+  --color-monitor: #38bdf8;
+  --color-optimizer: #fbbf5c;
+  --color-approval: #a78bfa;
+  --color-communicator: #34d399;
+
+  --color-accent: #5b9dff;
+  --color-danger: #f87171;
+  --color-success: #34d399;
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  background-image:
+    radial-gradient(1100px 600px at 78% -12%, rgba(91, 157, 255, 0.09), transparent 60%),
+    radial-gradient(900px 500px at 8% 8%, rgba(167, 139, 250, 0.07), transparent 55%),
+    linear-gradient(var(--color-bg-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-bg-grid) 1px, transparent 1px);
+  background-size:
+    100% 100%,
+    100% 100%,
+    44px 44px,
+    44px 44px;
+  background-attachment: fixed;
+}
+
+.glass {
+  background: linear-gradient(180deg, rgba(20, 29, 46, 0.72), rgba(15, 22, 35, 0.72));
+  border: 1px solid var(--color-border);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+}
+
+.glass-hover {
+  transition:
+    border-color 180ms ease,
+    transform 180ms ease,
+    box-shadow 180ms ease;
+}
+.glass-hover:hover {
+  border-color: var(--color-border-bright);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px -12px rgba(0, 0, 0, 0.6);
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+.thin-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+.thin-scroll::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 8px;
+}
+.thin-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

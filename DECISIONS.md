@@ -4,6 +4,8 @@ Running log, newest first. Non-obvious trade-offs get a full record under [docs/
 
 | Date | Decision | Notes |
 |---|---|---|
+| 2026-07-27 | Stream over NDJSON, keep the paused run in-process | `graph.stream` yields node events as lines; a module-level checkpointer lets resume find the paused run. Simple and works on one instance; scaling out would need a shared store. |
+| 2026-07-27 | Frontend has a browser demo-mode fallback | With no backend URL the UI replays canned scripts that mirror the fixtures, so the public Vercel link always works even when Cloud Run is scaled to zero. |
 | 2026-07-07 | Service resolves the approval gate in one request | Passing decision (approve/reject) with the request keeps Cloud Run stateless and free-tier friendly. Durable cross-request pause/resume stays a local SQLite feature; the cloud would need Cloud SQL. |
 | 2026-07-07 | Deploy via `gcloud run deploy --source` | Cloud Build builds the image, so no local Docker is needed and one command ships it. Terraform is provided as the IaC alternative. |
 | 2026-07-07 | CrewAI gate lives outside the crew | CrewAI can't park a half-finished run, so the threshold check sits in Python between two kickoffs. That asymmetry is itself the headline comparison finding. |

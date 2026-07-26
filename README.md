@@ -51,6 +51,7 @@ In progress, built in the open.
 - [x] Written LangGraph vs CrewAI comparison with measured runtime numbers: [docs/COMPARISON.md](docs/COMPARISON.md)
 - [x] Observability: per-node timings always on, Langfuse/LangSmith export when keys are set
 - [x] GCP deploy: HTTP service on Cloud Run, one-command deploy + Terraform ([docs/DEPLOY.md](docs/DEPLOY.md))
+- [x] Web UI: live-streaming dashboard with animated agent pipeline and interactive approval gate ([web/](web/))
 
 Decisions are logged in [DECISIONS.md](DECISIONS.md).
 
@@ -64,11 +65,22 @@ make run              # runs a simulated disruption scenario (CLI)
 make serve            # starts the HTTP service on http://localhost:8080
 ```
 
+## Web UI
+
+There's a live-streaming dashboard in [web/](web/) (Next.js, TypeScript,
+Tailwind, Framer Motion): pick a scenario, watch the agents execute in real
+time, approve or reject at the cost-override gate, and read the drafted notice.
+It runs against the backend or in a self-contained browser demo mode.
+
+```bash
+cd web && npm install && npm run dev   # http://localhost:3000
+```
+
 ## Deploying
 
-The orchestrator also ships as an HTTP service (`supplyagents.service`) for
-Cloud Run. See [docs/DEPLOY.md](docs/DEPLOY.md) for the full walkthrough;
-short version, once `gcloud` is set up:
+The orchestrator ships as an HTTP service (`supplyagents.service`) for Cloud
+Run, and the UI deploys to Vercel. See [docs/DEPLOY.md](docs/DEPLOY.md) for the
+full walkthrough; short version, once `gcloud` is set up:
 
 ```bash
 PROJECT_ID=<your-project> ./deploy/deploy.sh
