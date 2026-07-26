@@ -22,7 +22,7 @@ export const SCENARIOS: Scenario[] = [
     title: "North Sea storm",
     route: "R-201 · Hamburg → Oslo",
     severity: "moderate",
-    blurb: "A storm suspends Hamburg port ops. A cheap reroute keeps it under the approval bar.",
+    blurb: "A storm suspends Hamburg port ops. A cheap reroute stays under the approval bar.",
   },
   {
     id: "suez-blockage",
@@ -33,24 +33,11 @@ export const SCENARIOS: Scenario[] = [
   },
 ];
 
-export const AGENTS: { id: AgentId; label: string; role: string; color: string }[] = [
-  { id: "monitor", label: "Monitor", role: "Detect disruptions", color: "var(--color-monitor)" },
-  {
-    id: "optimizer",
-    label: "Optimizer",
-    role: "Price reroute options",
-    color: "var(--color-optimizer)",
-  },
-  {
-    id: "human_approval",
-    label: "Approval",
-    role: "Human-in-the-loop gate",
-    color: "var(--color-approval)",
-  },
-  {
-    id: "communicator",
-    label: "Communicator",
-    role: "Draft customer notice",
-    color: "var(--color-communicator)",
-  },
+/** Pipeline order. The human_approval node is the one human-in-the-loop step;
+    everything else is autonomous machine work. */
+export const AGENTS: { id: AgentId; label: string; role: string; kind: "machine" | "human" }[] = [
+  { id: "monitor", label: "Monitor", role: "Detect disruptions", kind: "machine" },
+  { id: "optimizer", label: "Optimizer", role: "Price reroute options", kind: "machine" },
+  { id: "human_approval", label: "Approval", role: "Human decides", kind: "human" },
+  { id: "communicator", label: "Communicator", role: "Draft customer notice", kind: "machine" },
 ];

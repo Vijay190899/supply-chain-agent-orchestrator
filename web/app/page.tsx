@@ -1,13 +1,14 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import { Play, RotateCcw, Code2, Radio, FlaskConical } from "lucide-react";
+import { Play, RotateCcw, ArrowUpRight } from "lucide-react";
 import { AgentPipeline, type Status } from "@/components/AgentPipeline";
 import { EventLog, type LogLine } from "@/components/EventLog";
 import { ApprovalModal } from "@/components/ApprovalModal";
 import { ResultPanel } from "@/components/ResultPanel";
 import { ScenarioPicker } from "@/components/ScenarioPicker";
 import { runStream, resumeStream, IS_DEMO } from "@/lib/stream";
+import { SCENARIOS } from "@/lib/scenarios";
 import type { AgentId, ApprovalPayload, Decision, RunResult, StreamEvent } from "@/lib/types";
 
 type Phase = "idle" | "running" | "awaiting" | "done" | "error";
@@ -61,7 +62,7 @@ export default function Home() {
         setStatuses((prev) => ({ ...prev, human_approval: "active" }));
         setApproval(e.payload);
         setPhase("awaiting");
-        pushLog("system", ["awaiting human decision on the cost override…"]);
+        pushLog("system", ["paused · awaiting human decision on cost override"]);
       } else if (e.type === "done") {
         setResult(e.result);
         setStatuses((prev) => {
@@ -120,55 +121,57 @@ export default function Home() {
   }, []);
 
   const busy = phase === "running" || phase === "awaiting";
+  const ranOnce = phase !== "idle";
+  const blurb = SCENARIOS.find((s) => s.id === scenario)?.blurb;
 
   return (
-    <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
+    <main className="mx-auto max-w-[1140px] px-5 py-10 sm:px-8">
       <Header />
 
-      <section className="mt-8 grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <SectionLabel>1 · Pick a disruption scenario</SectionLabel>
-          <ScenarioPicker selected={scenario} onSelect={setScenario} disabled={busy} />
-        </div>
-        <div className="flex flex-col justify-end">
-          <SectionLabel>2 · Run the agents</SectionLabel>
-          <div className="glass flex flex-col gap-3 p-4">
+      {/* control bar: scenario + run merged */}
+      <section className="panel mt-8 p-4 sm:p-5">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-stretch">
+          <div className="min-w-0 flex-1">
+            <ScenarioPicker selected={scenario} onSelect={setScenario} disabled={busy} />
+            {blurb && (
+              <p className="mt-2.5 px-0.5 text-[12.5px] text-[var(--color-text-2)]">{blurb}</p>
+            )}
+          </div>
+          <div className="flex items-center gap-2 lg:flex-col lg:items-stretch lg:justify-center">
             <button
               onClick={start}
               disabled={busy}
-              className="flex items-center justify-center gap-2 rounded-xl bg-[var(--color-accent)] py-3 font-semibold text-[#06122b] transition hover:brightness-110 focus:ring-2 focus:ring-white focus:outline-none disabled:opacity-50"
+              className="flex flex-1 items-center justify-center gap-2 rounded-[8px] px-6 py-3 text-[14px] font-semibold text-[#241300] transition-[filter] hover:brightness-110 focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60 lg:flex-none"
+              style={{ background: "var(--color-machine)" }}
             >
-              <Play size={17} />
-              {phase === "idle" ? "Run scenario" : busy ? "Running…" : "Run again"}
+              <Play size={16} strokeWidth={2.5} />
+              {phase === "idle" ? "Run" : busy ? "Running" : "Run again"}
             </button>
             {(phase === "done" || phase === "error") && (
               <button
                 onClick={reset}
-                className="flex items-center justify-center gap-2 rounded-xl border border-[var(--color-border-bright)] py-2.5 text-sm text-[var(--color-muted)] transition hover:text-[var(--color-text)] focus:outline-none"
+                aria-label="Reset"
+                className="flex items-center justify-center gap-1.5 rounded-[8px] border border-[var(--color-border-strong)] px-4 py-3 text-[13px] text-[var(--color-text-2)] transition-colors hover:text-[var(--color-text)] focus-visible:outline-none"
               >
-                <RotateCcw size={15} /> Reset
+                <RotateCcw size={14} /> Reset
               </button>
             )}
-            <p className="text-center text-[11px] text-[var(--color-faint)]">
-              Status: <span className="tabular text-[var(--color-muted)]">{phase}</span>
-            </p>
           </div>
         </div>
       </section>
 
-      <section className="mt-8">
-        <SectionLabel>Agent pipeline</SectionLabel>
+      {/* focal: the pipeline */}
+      <section className="mt-4">
         <AgentPipeline statuses={statuses} />
       </section>
 
-      <section className="mt-8 grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <div>
-          <SectionLabel>Live event stream</SectionLabel>
-          <EventLog lines={log} />
+      {/* results + live log */}
+      <section className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-12">
+        <div className="lg:col-span-7">
+          <ResultPanel result={result} timings={timings} active={ranOnce} />
         </div>
-        <div>
-          <SectionLabel>Result</SectionLabel>
-          <ResultPanel result={result} timings={timings} />
+        <div className="lg:col-span-5">
+          <EventLog lines={log} />
         </div>
       </section>
 
@@ -180,54 +183,43 @@ export default function Home() {
 
 function Header() {
   return (
-    <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+    <header className="flex items-start justify-between gap-4">
       <div>
-        <div className="mb-2 flex items-center gap-2">
+        <div className="mb-2 flex items-center gap-2 font-mono text-[11px]">
           <span
-            className="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold"
-            style={{
-              background: IS_DEMO ? "var(--color-optimizer)1f" : "var(--color-success)1f",
-              color: IS_DEMO ? "var(--color-optimizer)" : "var(--color-success)",
-            }}
-          >
-            {IS_DEMO ? <FlaskConical size={12} /> : <Radio size={12} />}
-            {IS_DEMO ? "demo mode" : "live backend"}
+            className="h-1.5 w-1.5 rounded-full"
+            style={{ background: IS_DEMO ? "var(--color-machine)" : "var(--color-success)" }}
+          />
+          <span className="text-[var(--color-faint)]">
+            {IS_DEMO ? "demo mode · replayed runs" : "live · connected to backend"}
           </span>
         </div>
-        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Disruption Console</h1>
-        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--color-muted)]">
-          A multi-agent logistics orchestrator built on LangGraph. Watch it detect a supply-chain
-          disruption, price reroute options, pause for a human on expensive overrides, and draft the
-          customer notice, streamed live as the agents run.
+        <h1 className="text-[26px] font-semibold tracking-tight sm:text-[30px]">
+          Disruption Console
+        </h1>
+        <p className="mt-1.5 max-w-xl text-[13.5px] text-[var(--color-text-2)]">
+          Four LangGraph agents respond to a supply-chain disruption, and stop for a human when the
+          fix gets expensive. Watch it run.
         </p>
       </div>
       <a
         href="https://github.com/Vijay190899/supply-chain-agent-orchestrator"
         target="_blank"
         rel="noreferrer"
-        className="glass glass-hover flex shrink-0 items-center gap-2 px-3 py-2 text-sm text-[var(--color-muted)]"
+        className="flex shrink-0 items-center gap-1 rounded-[8px] border border-[var(--color-border)] px-3 py-2 font-mono text-[12px] text-[var(--color-text-2)] transition-colors hover:border-[var(--color-border-strong)] hover:text-[var(--color-text)]"
       >
-        <Code2 size={16} /> Source
+        source <ArrowUpRight size={13} />
       </a>
     </header>
   );
 }
 
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <h2 className="mb-3 text-xs font-semibold tracking-wider text-[var(--color-faint)] uppercase">
-      {children}
-    </h2>
-  );
-}
-
 function Footer() {
   return (
-    <footer className="mt-10 border-t border-[var(--color-border)] pt-6 text-xs text-[var(--color-faint)]">
-      LangGraph · MCP tool feeds · action guardrails · Langfuse tracing · CrewAI comparison. The
-      approval gate is a real graph interrupt, not a scripted pause.{" "}
-      {IS_DEMO &&
-        "Demo mode replays canned runs; point NEXT_PUBLIC_API_URL at the backend for live."}
+    <footer className="mt-10 flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[11.5px] text-[var(--color-faint)]">
+      <span>langgraph</span> · <span>mcp feeds</span> · <span>guardrails</span> ·{" "}
+      <span>langfuse</span> · <span>crewai comparison</span>
+      <span className="ml-auto">the approval gate is a real graph interrupt, not a scripted pause</span>
     </footer>
   );
 }

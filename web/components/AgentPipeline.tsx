@@ -1,86 +1,109 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Radar, Route, UserCheck, Mail, Check, Loader2, Minus } from "lucide-react";
+import { Check } from "lucide-react";
 import type { AgentId } from "@/lib/types";
 import { AGENTS } from "@/lib/scenarios";
 
 export type Status = "idle" | "active" | "done" | "skipped";
 
-const ICONS: Record<AgentId, typeof Radar> = {
-  monitor: Radar,
-  optimizer: Route,
-  human_approval: UserCheck,
-  communicator: Mail,
-};
+const MACHINE = "var(--color-machine)";
+const HUMAN = "var(--color-human)";
+const SUCCESS = "var(--color-success)";
+
+function activeColor(id: AgentId) {
+  return id === "human_approval" ? HUMAN : MACHINE;
+}
 
 function Node({
   id,
+  index,
   label,
   role,
-  color,
   status,
 }: {
   id: AgentId;
+  index: number;
   label: string;
   role: string;
-  color: string;
   status: Status;
 }) {
-  const Icon = ICONS[id];
+  const color = activeColor(id);
   const active = status === "active";
   const done = status === "done";
   const skipped = status === "skipped";
 
   return (
-    <motion.div
-      className="glass relative flex w-full flex-col items-center gap-2 px-4 py-5 text-center"
-      style={{
-        borderColor: active || done ? color : undefined,
-        opacity: skipped ? 0.45 : 1,
-      }}
-      animate={
-        active
-          ? { boxShadow: [`0 0 0px ${color}00`, `0 0 26px ${color}55`, `0 0 0px ${color}00`] }
-          : { boxShadow: "0 0 0px transparent" }
-      }
-      transition={active ? { duration: 1.6, repeat: Infinity } : { duration: 0.3 }}
-    >
-      <div
-        className="relative flex h-12 w-12 items-center justify-center rounded-full"
-        style={{
-          background: done || active ? `${color}1f` : "var(--color-surface-2)",
-          border: `1.5px solid ${done || active ? color : "var(--color-border)"}`,
-        }}
-      >
-        {done ? (
-          <Check size={22} style={{ color }} />
-        ) : active ? (
-          <Loader2 size={20} className="animate-spin" style={{ color }} />
-        ) : skipped ? (
-          <Minus size={20} className="text-[var(--color-faint)]" />
-        ) : (
-          <Icon size={20} className="text-[var(--color-muted)]" />
+    <div className="flex min-w-0 flex-1 items-center gap-3">
+      {/* status pip */}
+      <div className="relative flex h-9 w-9 shrink-0 items-center justify-center">
+        {active && (
+          <motion.span
+            className="absolute inset-0 rounded-[8px]"
+            style={{ background: color, opacity: 0.14 }}
+            animate={{ opacity: [0.14, 0.05, 0.14] }}
+            transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+          />
         )}
+        <div
+          className="flex h-9 w-9 items-center justify-center rounded-[8px] font-mono text-[13px]"
+          style={{
+            border: `1px solid ${active || done ? color : "var(--color-border-strong)"}`,
+            color: done ? SUCCESS : active ? color : "var(--color-faint)",
+            background: active ? `color-mix(in srgb, ${color} 10%, transparent)` : "transparent",
+          }}
+        >
+          {done ? (
+            <motion.span
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", stiffness: 500, damping: 24, delay: 0.1 }}
+            >
+              <Check size={16} style={{ color: SUCCESS }} strokeWidth={2.5} />
+            </motion.span>
+          ) : (
+            <span>{index + 1}</span>
+          )}
+        </div>
       </div>
-      <div className="text-sm font-semibold" style={{ color: done || active ? color : undefined }}>
-        {label}
+
+      <div className="min-w-0" style={{ opacity: skipped ? 0.4 : 1 }}>
+        <div
+          className="truncate font-mono text-[13px] font-medium"
+          style={{ color: active ? color : done ? "var(--color-text)" : "var(--color-text-2)" }}
+        >
+          {label.toLowerCase()}
+        </div>
+        <div className="truncate text-[11px] text-[var(--color-faint)]">
+          {skipped ? "skipped" : active ? "running…" : role}
+        </div>
       </div>
-      <div className="text-[11px] leading-tight text-[var(--color-muted)]">
-        {skipped ? "skipped" : role}
-      </div>
-    </motion.div>
+    </div>
   );
 }
 
-function Connector({ filled }: { filled: boolean }) {
+function Connector({ filled, vertical }: { filled: boolean; vertical?: boolean }) {
+  if (vertical) {
+    return (
+      <div className="ml-[18px] h-5 w-[2px] overflow-hidden bg-[var(--color-border-strong)]">
+        <motion.div
+          className="w-full"
+          style={{ background: MACHINE, transformOrigin: "top" }}
+          initial={{ scaleY: 0 }}
+          animate={{ scaleY: filled ? 1 : 0, height: "100%" }}
+          transition={{ type: "spring", stiffness: 260, damping: 30 }}
+        />
+      </div>
+    );
+  }
   return (
-    <div className="relative hidden h-[2px] w-10 shrink-0 self-center overflow-hidden rounded bg-[var(--color-border)] md:block">
+    <div className="mx-1 hidden h-[2px] flex-1 overflow-hidden bg-[var(--color-border-strong)] md:block">
       <motion.div
-        className="absolute inset-y-0 left-0 bg-[var(--color-accent)]"
-        initial={{ width: 0 }}
-        animate={{ width: filled ? "100%" : 0 }}
-        transition={{ duration: 0.35, ease: "easeOut" }}
+        className="h-full"
+        style={{ background: MACHINE, transformOrigin: "left" }}
+        initial={{ scaleX: 0 }}
+        animate={{ scaleX: filled ? 1 : 0, width: "100%" }}
+        transition={{ type: "spring", stiffness: 260, damping: 30 }}
       />
     </div>
   );
@@ -88,19 +111,46 @@ function Connector({ filled }: { filled: boolean }) {
 
 export function AgentPipeline({ statuses }: { statuses: Record<AgentId, Status> }) {
   return (
-    <div className="flex flex-col items-stretch gap-3 md:flex-row md:items-center">
-      {AGENTS.map((agent, i) => {
-        const prev = AGENTS[i - 1];
-        const filled = prev ? statuses[prev.id] === "done" : false;
-        return (
-          <div key={agent.id} className="contents">
-            {i > 0 && <Connector filled={filled} />}
-            <div className="flex-1">
-              <Node {...agent} status={statuses[agent.id]} />
+    <div className="panel-focal blueprint px-5 py-5 sm:px-7 sm:py-6">
+      {/* desktop: horizontal rail */}
+      <div className="hidden items-center md:flex">
+        {AGENTS.map((agent, i) => {
+          const prev = AGENTS[i - 1];
+          const filled = prev ? statuses[prev.id] === "done" : false;
+          return (
+            <div key={agent.id} className="contents">
+              {i > 0 && <Connector filled={filled} />}
+              <Node
+                id={agent.id}
+                index={i}
+                label={agent.label}
+                role={agent.role}
+                status={statuses[agent.id]}
+              />
             </div>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
+
+      {/* mobile: vertical rail */}
+      <div className="flex flex-col md:hidden">
+        {AGENTS.map((agent, i) => {
+          const prev = AGENTS[i - 1];
+          const filled = prev ? statuses[prev.id] === "done" : false;
+          return (
+            <div key={agent.id}>
+              {i > 0 && <Connector filled={filled} vertical />}
+              <Node
+                id={agent.id}
+                index={i}
+                label={agent.label}
+                role={agent.role}
+                status={statuses[agent.id]}
+              />
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

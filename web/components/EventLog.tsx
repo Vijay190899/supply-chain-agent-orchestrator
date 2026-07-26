@@ -1,17 +1,21 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Terminal } from "lucide-react";
+import { motion } from "framer-motion";
 import type { AgentId } from "@/lib/types";
 
 export type LogLine = { id: number; agent: AgentId | "system"; text: string };
 
-const DOT: Record<string, string> = {
-  monitor: "var(--color-monitor)",
-  optimizer: "var(--color-optimizer)",
-  human_approval: "var(--color-approval)",
-  communicator: "var(--color-communicator)",
+const TAG: Record<string, string> = {
+  monitor: "monitor",
+  optimizer: "optimizer",
+  human_approval: "approval",
+  communicator: "communic",
+  system: "system",
+};
+
+const TAG_COLOR: Record<string, string> = {
+  human_approval: "var(--color-human)",
   system: "var(--color-faint)",
 };
 
@@ -22,34 +26,38 @@ export function EventLog({ lines }: { lines: LogLine[] }) {
   }, [lines]);
 
   return (
-    <div className="glass flex h-full flex-col overflow-hidden">
-      <div className="flex items-center gap-2 border-b border-[var(--color-border)] px-4 py-3">
-        <Terminal size={15} className="text-[var(--color-muted)]" />
-        <span className="text-xs font-semibold tracking-wide text-[var(--color-muted)] uppercase">
-          Event stream
+    <div className="panel flex h-full min-h-[260px] flex-col overflow-hidden">
+      <div className="flex items-center justify-between px-4 py-2.5">
+        <span className="font-mono text-[12px] text-[var(--color-text-2)]">event stream</span>
+        <span className="font-mono text-[11px] text-[var(--color-faint)]">
+          {lines.length} {lines.length === 1 ? "event" : "events"}
         </span>
       </div>
-      <div className="thin-scroll min-h-[180px] flex-1 overflow-y-auto p-4 font-mono text-[13px] leading-relaxed">
+      <div className="mx-4 border-t border-[var(--color-border)]" />
+      <div className="thin-scroll flex-1 overflow-y-auto px-4 py-3 font-mono text-[12.5px] leading-[1.7]">
         {lines.length === 0 ? (
-          <p className="text-[var(--color-faint)]">Waiting for a run…</p>
+          <p className="text-[var(--color-faint)]">idle · press run to begin</p>
         ) : (
-          <AnimatePresence initial={false}>
-            {lines.map((line) => (
-              <motion.div
-                key={line.id}
-                initial={{ opacity: 0, x: -8 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.22, ease: "easeOut" }}
-                className="flex gap-2.5 py-[3px]"
+          lines.map((line, i) => (
+            <motion.div
+              key={line.id}
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+              className="flex gap-3 tabular"
+            >
+              <span className="w-6 shrink-0 text-right text-[var(--color-faint)]">
+                {String(i + 1).padStart(2, "0")}
+              </span>
+              <span
+                className="w-[68px] shrink-0"
+                style={{ color: TAG_COLOR[line.agent] ?? "var(--color-text-2)" }}
               >
-                <span
-                  className="mt-[6px] h-2 w-2 shrink-0 rounded-full"
-                  style={{ background: DOT[line.agent] }}
-                />
-                <span className="text-[var(--color-text)]/90">{line.text}</span>
-              </motion.div>
-            ))}
-          </AnimatePresence>
+                {TAG[line.agent]}
+              </span>
+              <span className="min-w-0 flex-1 text-[var(--color-text)]/85">{line.text}</span>
+            </motion.div>
+          ))
         )}
         <div ref={endRef} />
       </div>

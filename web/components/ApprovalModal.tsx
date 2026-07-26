@@ -2,8 +2,9 @@
 
 import { useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { AlertTriangle, Check, X } from "lucide-react";
 import type { ApprovalPayload, Decision } from "@/lib/types";
+
+const HUMAN = "var(--color-human)";
 
 export function ApprovalModal({
   payload,
@@ -12,79 +13,80 @@ export function ApprovalModal({
   payload: ApprovalPayload | null;
   onDecide: (d: Decision) => void;
 }) {
-  const rejectRef = useRef<HTMLButtonElement>(null);
+  const approveRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
-    if (payload) rejectRef.current?.focus();
+    if (payload) approveRef.current?.focus();
   }, [payload]);
 
   return (
     <AnimatePresence>
       {payload && (
         <motion.div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
+          transition={{ duration: 0.16 }}
         >
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          {/* the only backdrop-blur in the app */}
+          <div className="absolute inset-0 bg-[#06070a]/70 backdrop-blur-[6px]" />
+
           <motion.div
             role="alertdialog"
             aria-modal="true"
             aria-labelledby="approval-title"
-            className="glass relative w-full max-w-md p-6"
-            style={{ borderColor: "var(--color-approval)" }}
-            initial={{ scale: 0.92, y: 12, opacity: 0 }}
-            animate={{ scale: 1, y: 0, opacity: 1 }}
-            exit={{ scale: 0.92, y: 12, opacity: 0 }}
-            transition={{ type: "spring", stiffness: 260, damping: 22 }}
+            className="panel-focal relative w-full rounded-b-none rounded-t-2xl p-6 sm:max-w-md sm:rounded-2xl"
+            style={{ borderColor: HUMAN }}
+            initial={{ opacity: 0, scale: 0.96, y: 24 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.96, y: 24 }}
+            transition={{ type: "spring", stiffness: 420, damping: 32 }}
           >
-            <div className="mb-4 flex items-center gap-3">
-              <div
-                className="flex h-10 w-10 items-center justify-center rounded-full"
-                style={{ background: "var(--color-approval)1f" }}
-              >
-                <AlertTriangle size={20} style={{ color: "var(--color-approval)" }} />
-              </div>
-              <div>
-                <h2 id="approval-title" className="text-base font-semibold">
-                  Human approval required
-                </h2>
-                <p className="text-xs text-[var(--color-muted)]">
-                  Cost override exceeds the 15% threshold
-                </p>
-              </div>
-            </div>
-
-            <div className="mb-5 space-y-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-2)]/60 p-4 text-sm">
-              <Row label="Route" value={payload.route_id} />
-              <Row label="Option" value={payload.option} />
-              <Row
-                label="Cost impact"
-                value={`+${Math.round(payload.cost_delta * 100)}%`}
-                emphasize="var(--color-danger)"
+            <div className="mb-1 flex items-center gap-2">
+              <motion.span
+                className="h-2 w-2 rounded-full"
+                style={{ background: HUMAN }}
+                animate={{ scale: [1, 1.35, 1] }}
+                transition={{ duration: 0.4 }}
               />
-              <Row label="ETA impact" value={`+${payload.eta_delta_hours}h`} />
+              <span className="font-mono text-[11px] tracking-wide" style={{ color: HUMAN }}>
+                human in the loop
+              </span>
             </div>
-
-            <p className="mb-4 text-xs leading-relaxed text-[var(--color-muted)]">
-              The agent may draft but not send, and cannot exceed the threshold without a decision.
-              This gate is enforced by the graph, not the prompt.
+            <h2 id="approval-title" className="text-[19px] font-semibold tracking-tight">
+              Approve this override?
+            </h2>
+            <p className="mt-1 text-[13px] text-[var(--color-text-2)]">
+              The optimizer&apos;s best option exceeds the 15% cost ceiling. The agents cannot
+              proceed without your call.
             </p>
 
-            <div className="flex gap-3">
+            <div className="mt-4 space-y-2.5 font-mono text-[13px]">
+              <Row label="route" value={payload.route_id} />
+              <Row label="option" value={payload.option} />
+              <Row
+                label="cost"
+                value={`+${Math.round(payload.cost_delta * 100)}%`}
+                color="var(--color-danger)"
+                big
+              />
+              <Row label="eta" value={`+${payload.eta_delta_hours}h`} />
+            </div>
+
+            <div className="mt-6 flex gap-3">
               <button
-                ref={rejectRef}
                 onClick={() => onDecide("rejected")}
-                className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-[var(--color-border-bright)] py-2.5 text-sm font-semibold transition hover:bg-white/5 focus:ring-2 focus:ring-[var(--color-danger)] focus:outline-none"
+                className="flex-1 rounded-[8px] border border-[var(--color-border-strong)] py-2.5 text-[14px] font-medium text-[var(--color-text-2)] transition-colors hover:text-[var(--color-text)] focus-visible:ring-2 focus-visible:ring-[var(--color-danger)] focus-visible:outline-none"
               >
-                <X size={16} /> Reject
+                Reject
               </button>
               <button
+                ref={approveRef}
                 onClick={() => onDecide("approved")}
-                className="flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold text-[#062016] transition hover:brightness-110 focus:ring-2 focus:ring-white focus:outline-none"
+                className="flex-1 rounded-[8px] py-2.5 text-[14px] font-semibold text-[#052018] transition-[filter] hover:brightness-110 focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none"
                 style={{ background: "var(--color-success)" }}
               >
-                <Check size={16} /> Approve override
+                Approve
               </button>
             </div>
           </motion.div>
@@ -97,16 +99,21 @@ export function ApprovalModal({
 function Row({
   label,
   value,
-  emphasize,
+  color,
+  big,
 }: {
   label: string;
   value: string;
-  emphasize?: string;
+  color?: string;
+  big?: boolean;
 }) {
   return (
-    <div className="flex items-center justify-between">
-      <span className="text-[var(--color-muted)]">{label}</span>
-      <span className="tabular font-mono font-medium" style={{ color: emphasize }}>
+    <div className="flex items-baseline justify-between border-b border-[var(--color-border)] pb-2">
+      <span className="text-[var(--color-faint)]">{label}</span>
+      <span
+        className="tabular font-medium"
+        style={{ color: color ?? "var(--color-text)", fontSize: big ? 18 : 13 }}
+      >
         {value}
       </span>
     </div>
