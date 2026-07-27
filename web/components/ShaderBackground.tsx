@@ -111,16 +111,21 @@ export function ShaderBackground({ energy = 0 }: { energy?: number }) {
     let w = 0;
     let h = 0;
     const resize = () => {
-      const cw = canvas.clientWidth || window.innerWidth;
-      const ch = canvas.clientHeight || window.innerHeight;
-      w = Math.max(2, Math.floor(cw * dpr));
-      h = Math.max(2, Math.floor(ch * dpr));
-      canvas.width = w;
-      canvas.height = h;
+      // Track the real viewport, not the element box (robust across
+      // fullscreen toggles and zoom).
+      w = Math.max(2, Math.floor(window.innerWidth * dpr));
+      h = Math.max(2, Math.floor(window.innerHeight * dpr));
+      if (canvas.width !== w || canvas.height !== h) {
+        canvas.width = w;
+        canvas.height = h;
+      }
       gl.viewport(0, 0, w, h);
     };
     resize();
     window.addEventListener("resize", resize);
+    document.addEventListener("fullscreenchange", resize);
+    const ro = new ResizeObserver(resize);
+    ro.observe(document.documentElement);
 
     const mouse = { x: 0.5, y: 0.5 };
     const target = { x: 0.5, y: 0.5 };
@@ -156,6 +161,8 @@ export function ShaderBackground({ energy = 0 }: { energy?: number }) {
     return () => {
       cancelAnimationFrame(raf);
       window.removeEventListener("resize", resize);
+      document.removeEventListener("fullscreenchange", resize);
+      ro.disconnect();
       window.removeEventListener("pointermove", onMove);
       document.removeEventListener("visibilitychange", onVis);
     };
