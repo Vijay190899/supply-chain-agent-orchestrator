@@ -1,0 +1,21 @@
+# AWS Amplify Hosting build config for the monorepo. The web UI lives in web/;
+# Amplify builds and serves it as a Next.js app. Leave NEXT_PUBLIC_API_URL unset
+# in the Amplify console for demo mode, or set it to the backend URL for live.
+version: 1
+applications:
+  - appRoot: web
+    frontend:
+      phases:
+        preBuild:
+          commands:
+            - npm ci
+        build:
+          commands:
+            - npm run build
+      artifacts:
+        baseDirectory: .next
+        files:
+          - "**/*"
+      cache:
+        paths:
+          - node_modules/**/*

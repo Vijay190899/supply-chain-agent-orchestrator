@@ -1,9 +1,12 @@
 import type { NextConfig } from "next";
 
+// Output mode is host-dependent:
+//   NEXT_OUTPUT=standalone -> self-contained server bundle (Cloud Run container)
+//   unset                  -> default SSR build (AWS Amplify, Vercel)
+const output = process.env.NEXT_OUTPUT as NextConfig["output"] | undefined;
+
 const nextConfig: NextConfig = {
-  // Emit a self-contained server bundle (.next/standalone/server.js) so the
-  // container image stays small. Required for the Cloud Run deploy.
-  output: "standalone",
+  ...(output ? { output } : {}),
 };
 
 export default nextConfig;
