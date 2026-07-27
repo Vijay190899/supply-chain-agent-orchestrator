@@ -1,11 +1,12 @@
 "use client";
 
+import { motion } from "framer-motion";
 import { SCENARIOS, type Scenario } from "@/lib/scenarios";
 
-const SEV: Record<Scenario["severity"], { tag: string; color: string }> = {
-  nominal: { tag: "NOMINAL", color: "var(--color-nominal)" },
-  caution: { tag: "CAUTION", color: "var(--color-amber)" },
-  critical: { tag: "CRITICAL", color: "var(--color-rose)" },
+const SEV: Record<Scenario["severity"], string> = {
+  nominal: "var(--color-ok)",
+  caution: "var(--color-warm)",
+  critical: "var(--color-rose)",
 };
 
 export function ScenarioPicker({
@@ -18,41 +19,41 @@ export function ScenarioPicker({
   disabled: boolean;
 }) {
   return (
-    <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+    <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
       {SCENARIOS.map((s) => {
         const active = selected === s.id;
-        const sev = SEV[s.severity];
         return (
           <button
             key={s.id}
             onClick={() => !disabled && onSelect(s.id)}
             disabled={disabled}
             aria-pressed={active}
-            className="group relative rounded-[4px] px-3 py-2.5 text-left transition-colors focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+            className="group relative overflow-hidden rounded-xl border px-4 py-3 text-left transition-colors focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
             style={{
-              background: active ? "var(--color-panel-2)" : "transparent",
-              border: `1px solid ${active ? "var(--color-hair-2)" : "var(--color-hair)"}`,
+              background: active ? "var(--color-glass-2)" : "transparent",
+              borderColor: active ? "var(--color-edge-2)" : "var(--color-edge)",
             }}
           >
             {active && (
-              <span
-                className="absolute top-2 bottom-2 left-0 w-[2px]"
-                style={{ background: sev.color }}
+              <motion.span
+                layoutId="scenario-glow"
+                className="pointer-events-none absolute inset-0"
+                style={{
+                  background: `radial-gradient(120% 90% at 0% 100%, ${SEV[s.severity]}18, transparent 60%)`,
+                }}
               />
             )}
-            <div className="flex items-center justify-between">
-              <span className="telemetry text-[11px] text-[var(--color-muted)]">{s.code}</span>
-              <span className="telemetry text-[9px]" style={{ color: sev.color }}>
-                {sev.tag}
-              </span>
+            <div className="relative flex items-center justify-between">
+              <span className="mono text-[11px] text-[var(--color-muted)]">{s.code}</span>
+              <span className="h-1.5 w-1.5 rounded-full" style={{ background: SEV[s.severity] }} />
             </div>
             <div
-              className="mt-0.5 text-[13.5px] font-medium"
-              style={{ color: active ? "var(--color-text)" : "var(--color-muted)" }}
+              className="serif relative mt-1 text-[18px] leading-tight"
+              style={{ color: active ? "var(--color-ink)" : "var(--color-muted)" }}
             >
               {s.title}
             </div>
-            <div className="telemetry mt-0.5 text-[10px] text-[var(--color-faint)]">
+            <div className="mono relative mt-0.5 text-[10px] text-[var(--color-faint)]">
               {s.origin} → {s.dest}
             </div>
           </button>

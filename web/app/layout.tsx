@@ -1,31 +1,29 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Sans, IBM_Plex_Mono, IBM_Plex_Sans_Condensed } from "next/font/google";
+import { Instrument_Serif, Onest, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
-// Industrial, telemetry-grade type. Plex Mono carries the instrument identity;
-// Plex Sans is the neutral body; the condensed cut is for stencilled headings.
-const plexSans = IBM_Plex_Sans({
-  variable: "--font-sans",
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-});
-
-const plexMono = IBM_Plex_Mono({
-  variable: "--font-mono",
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-});
-
-const plexCond = IBM_Plex_Sans_Condensed({
+// Editorial serif display over a clean neutral sans, with a mono for telemetry.
+const serif = Instrument_Serif({
   variable: "--font-display",
   subsets: ["latin"],
-  weight: ["500", "600", "700"],
+  weight: "400",
+  style: ["normal", "italic"],
+});
+
+const onest = Onest({
+  variable: "--font-sans",
+  subsets: ["latin"],
+});
+
+const mono = Geist_Mono({
+  variable: "--font-mono",
+  subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: "Disruption Console · Vessel traffic control for autonomous logistics agents",
+  title: "Disruption Console · Autonomous logistics, watched by a human",
   description:
-    "A night-watch traffic console for a multi-agent logistics orchestrator: watch four agents reroute a blocked shipping lane and hold for a human on expensive overrides.",
+    "An immersive console for a multi-agent logistics orchestrator: four agents reroute a blocked shipping lane and hold for a human when the fix runs expensive.",
 };
 
 export default function RootLayout({
@@ -34,7 +32,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${plexSans.variable} ${plexMono.variable} ${plexCond.variable} h-full antialiased`}
+      className={`${serif.variable} ${onest.variable} ${mono.variable} h-full antialiased`}
     >
       <body className="min-h-full">{children}</body>
     </html>
