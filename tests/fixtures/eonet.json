@@ -1,0 +1,40 @@
+{
+  "events": [
+    {
+      "id": "EONET_9001",
+      "title": "Tropical Storm Khanun",
+      "categories": [{ "id": "severeStorms", "title": "Severe Storms" }],
+      "geometry": [
+        {
+          "magnitudeValue": 70.0,
+          "magnitudeUnit": "kts",
+          "date": "2026-07-27T00:00:00Z",
+          "type": "Point",
+          "coordinates": [32.6, 30.9]
+        }
+      ]
+    },
+    {
+      "id": "EONET_9002",
+      "title": "Hurricane Genevieve",
+      "categories": [{ "id": "severeStorms", "title": "Severe Storms" }],
+      "geometry": [
+        {
+          "magnitudeValue": 130.0,
+          "magnitudeUnit": "kts",
+          "date": "2026-07-27T00:00:00Z",
+          "type": "Point",
+          "coordinates": [-110.8, 14.4]
+        }
+      ]
+    },
+    {
+      "id": "EONET_9003",
+      "title": "Iceberg A-83 drift",
+      "categories": [{ "id": "seaLakeIce", "title": "Sea and Lake Ice" }],
+      "geometry": [
+        { "date": "2026-07-27T00:00:00Z", "type": "Point", "coordinates": [8.4, 57.9] }
+      ]
+    }
+  ]
+}

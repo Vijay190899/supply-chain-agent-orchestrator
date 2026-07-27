@@ -13,7 +13,7 @@ from langgraph.checkpoint.memory import MemorySaver
 from langgraph.types import Command
 
 from supplyagents.config import get_settings
-from supplyagents.feeds import Feed
+from supplyagents.feeds import Feed, feed_for_scenario
 from supplyagents.graph import build_graph
 from supplyagents.observability import tracing_callbacks
 
@@ -33,7 +33,7 @@ def run_scenario(
     Returns: scenario, thread_id, events, whether approval was needed and the
     decision applied, the chosen option, and the drafted customer message.
     """
-    graph = build_graph(checkpointer or MemorySaver(), feed=feed)
+    graph = build_graph(checkpointer or MemorySaver(), feed=feed or feed_for_scenario(scenario))
     thread_id = thread_id or f"run-{uuid.uuid4().hex[:8]}"
     # Attach tracing when exporters are configured (e.g. Langfuse keys set as
     # Cloud Run secrets); a no-op otherwise.

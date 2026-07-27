@@ -4,6 +4,10 @@ Running log, newest first. Non-obvious trade-offs get a full record under [docs/
 
 | Date | Decision | Notes |
 |---|---|---|
+| 2026-07-27 | Fixtures stay the default; LiveFeed is opt-in | Live real-world data (EONET + Open-Meteo) is additive. Canned scenarios stay load-bearing so the demo never depends on "is there a disruption in the world right now." LiveFeed wraps LocalFeed as a loud fallback; network layer is lazy-imported so tests stay deterministic. |
+| 2026-07-27 | Benchmark commits provenance JSON and regenerates the table | `make bench` writes a dated JSON (git SHA, model, versions, every run) and rewrites COMPARISON.md between markers. Kills the hand-pasted-number smell; the doc traces to a reproducible artifact. |
+| 2026-07-27 | No CI gate on the live benchmark | It needs a key, spends tokens, and cross-environment wall time is not comparable. The keyless deterministic behavioral eval (`make eval`) is the CI gate instead; the benchmark runs on demand. |
+| 2026-07-27 | Behavioral invariants over Ragas | This is orchestration, not RAG, so a retrieval-eval score would be cargo-culting. The honest eval is deterministic assertions on the business rules (`tests/test_invariants.py`). |
 | 2026-07-27 | Stream over NDJSON, keep the paused run in-process | `graph.stream` yields node events as lines; a module-level checkpointer lets resume find the paused run. Simple and works on one instance; scaling out would need a shared store. |
 | 2026-07-27 | Frontend has a browser demo-mode fallback | With no backend URL the UI replays canned scripts that mirror the fixtures, so the public Vercel link always works even when Cloud Run is scaled to zero. |
 | 2026-07-07 | Service resolves the approval gate in one request | Passing decision (approve/reject) with the request keeps Cloud Run stateless and free-tier friendly. Durable cross-request pause/resume stays a local SQLite feature; the cloud would need Cloud SQL. |

@@ -20,9 +20,10 @@ class Settings(BaseSettings):
     langfuse_secret_key: str = ""
     langfuse_host: str = "https://cloud.langfuse.com"
 
-    # External data (blank -> mock providers)
-    weather_api_key: str = ""
-    news_api_key: str = ""
+    # Live feed (free, keyless: Open-Meteo + NASA EONET). Opt-in; the default
+    # feed stays the deterministic fixtures.
+    live_feed_enabled: bool = True
+    live_fallback_scenario: str = "storm-north-sea"
 
     # State
     checkpoint_db: str = "orchestrator.sqlite"

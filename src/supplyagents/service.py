@@ -57,11 +57,15 @@ class ResumeRequest(BaseModel):
     decision: Literal["approved", "rejected"] = "approved"
 
 
+def _valid_scenarios() -> list[str]:
+    return [*providers.known_scenarios(), "live"]
+
+
 def _require_scenario(scenario: str) -> None:
-    if scenario not in providers.known_scenarios():
+    if scenario not in _valid_scenarios():
         raise HTTPException(
             status_code=422,
-            detail=f"Unknown scenario. Known: {providers.known_scenarios()}",
+            detail=f"Unknown scenario. Known: {_valid_scenarios()}",
         )
 
 
@@ -69,7 +73,7 @@ def _require_scenario(scenario: str) -> None:
 def root() -> dict:
     return {
         "service": "supply-chain-agent-orchestrator",
-        "scenarios": providers.known_scenarios(),
+        "scenarios": _valid_scenarios(),
         "usage": 'POST /run with {"scenario": "suez-blockage", "decision": "approved"}',
     }
 
@@ -77,6 +81,14 @@ def root() -> dict:
 @app.get("/healthz")
 def healthz() -> dict:
     return {"status": "ok"}
+
+
+@app.get("/api/conditions")
+def conditions() -> dict:
+    """Current real weather per port (Open-Meteo). Read-only; empty on error."""
+    from supplyagents.live import LiveFeed
+
+    return {"ports": LiveFeed().conditions()}
 
 
 @app.post("/run")

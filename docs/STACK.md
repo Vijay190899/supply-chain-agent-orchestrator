@@ -12,8 +12,11 @@ What this uses and why.
 - **LangChain** for the shared LLM and tool plumbing under both.
 
 ## Tools and protocols
-- **MCP (Model Context Protocol)**: weather, news, and logistics tools exposed as MCP servers rather than inline functions.
+- **MCP (Model Context Protocol)**: the data feeds are exposed as MCP tools rather than inline functions, including live ones.
 - **A2A**, noted as the direction for agent-to-agent messaging. Not wired in yet.
+
+## Live data
+- **NASA EONET** (open natural events) and **Open-Meteo** (current weather), both free and keyless, behind the `Feed` protocol as an opt-in `live` scenario. Deterministic fixtures stay the default so tests and the demo stay reproducible.
 
 ## State
 - **SQLite** as the LangGraph checkpoint / thread store, so runs can pause for human approval and resume.

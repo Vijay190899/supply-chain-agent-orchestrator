@@ -1,5 +1,9 @@
 # Supply-chain agent orchestrator
 
+[![CI](https://github.com/Vijay190899/supply-chain-agent-orchestrator/actions/workflows/ci.yml/badge.svg)](https://github.com/Vijay190899/supply-chain-agent-orchestrator/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](pyproject.toml)
+
 In logistics, a disruption you hear about an hour late has usually already cost money. A customs hold, a storm across a shipping corridor, a strike. Someone has to notice it, work out what it does to the affected routes, decide whether to reroute or accept the delay, and tell the customer before they find out on their own. A lot of that is still a person refreshing dashboards.
 
 I wanted to find out whether a small group of agents could handle the first pass of that loop: watch the signals, cost out the options, draft the customer message, and pull a human in only when the decision is expensive enough to need one.
@@ -10,7 +14,7 @@ It's also the project where I settle a question I keep going back and forth on a
 
 Four roles working off shared state:
 
-- Monitor: polls weather, news, and logistics APIs for the active routes.
+- Monitor: checks the feeds for disruptions on the active routes. By default the feeds are deterministic fixtures (so the demo and CI are reproducible); a `live` scenario swaps in real data (see [Live data](#live-data)).
 - Optimizer: recalculates paths and freight cost when something changes.
 - Communicator: drafts the customer notification and adjusts tone to the segment.
 - Supervisor: routes control based on state, and stops for human sign-off when a cost override goes past 15%.
@@ -81,9 +85,49 @@ Then I write up the tradeoff honestly: how much boilerplate each one took, how m
 - Guardrails on actions, with least privilege. An agent can draft a message but not send it, and can propose a reroute but not go past the cost threshold without a human.
 - Observability: every run is traced (LangSmith or Langfuse) so I can see the decision path, latency, and token spend per agent.
 
+## Live data
+
+The default feeds are deterministic fixtures. The `live` scenario reflects the actual current world through two free, keyless APIs, mapped into the same `Disruption`/`RouteOption` shapes the fixtures use:
+
+- **NASA EONET** for open natural events (storms, ice, volcanoes), filtered to events within ~300 km of a lane waypoint.
+- **Open-Meteo** for current wind gusts and precipitation at the ports, thresholded into severity.
+
+Design notes, following the review that planned this:
+
+- The three canned scenarios stay the load-bearing demo. Live is additive, because "no disruption in the world right now" is a common and honest state (right now the lanes are usually calm) and a demo must never depend on it.
+- `LiveFeed` wraps `LocalFeed` as a fallback and degrades to it loudly on API error or timeout, so a run always tells its full story. Determinism is preserved: the network layer is imported lazily and never touches tests or CI. The mappers are pure and unit-tested against captured JSON in `tests/fixtures/`.
+- The live tools are exposed on the MCP server too (`poll_live_disruptions`, `live_conditions`).
+
+```bash
+uv run python -c "from supplyagents.live import LiveFeed; print(LiveFeed().conditions())"
+```
+
+## Observability and evals
+
+- **Tracing**, two layers: per-node timings are always on (no keys); Langfuse/LangSmith export is opt-in via keys. See [docs/OBSERVABILITY.md](docs/OBSERVABILITY.md).
+- **Behavioral eval gate** (`make eval`), the honest form of evals for an orchestrator: deterministic assertions that the business invariants always hold (approval fires iff cost Δ > 15%, cheapest-under-ETA-cap selection, draft-not-send, rejected override still issues a delay notice). Runs keyless in CI.
+- **Benchmark, made observable**: `make bench` runs the LangGraph-vs-CrewAI comparison, writes a dated provenance JSON to [compare/results/](compare/results/) (git SHA, model, versions, every per-run datapoint), and regenerates the table in [docs/COMPARISON.md](docs/COMPARISON.md) between markers. Benchmark runs are tagged `session=bench` in Langfuse so the traces cross-check the table.
+
+## Connecting an MCP client
+
+The data feeds are a real MCP server. Point any MCP client (Claude Desktop, MCP Inspector) at it over stdio:
+
+```json
+{
+  "mcpServers": {
+    "supply-chain-feeds": {
+      "command": "uv",
+      "args": ["run", "python", "-m", "supplyagents.mcp_server"]
+    }
+  }
+}
+```
+
+Tools: `active_routes`, `poll_disruptions`, `route_options`, `poll_live_disruptions`, `live_conditions`.
+
 ## Stack
 
-See [docs/STACK.md](docs/STACK.md); architecture and design in [docs/TECHNICAL_DOCUMENTATION.md](docs/TECHNICAL_DOCUMENTATION.md). In short: Python, LangGraph, CrewAI, MCP, SQLite for the checkpoint store, LangSmith/Langfuse, Docker, deployed on GCP.
+See [docs/STACK.md](docs/STACK.md); architecture and design in [docs/TECHNICAL_DOCUMENTATION.md](docs/TECHNICAL_DOCUMENTATION.md). In short: Python, LangGraph, CrewAI, MCP, SQLite for the checkpoint store, NASA EONET + Open-Meteo for live data, LangSmith/Langfuse, Docker. The HTTP service targets Cloud Run; the web UI is deployed on AWS Amplify (currently in self-contained demo mode, with the live backend a config switch away).
 
 ## Status
 

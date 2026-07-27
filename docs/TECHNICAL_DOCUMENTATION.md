@@ -4,10 +4,10 @@
 
 | | |
 |---|---|
-| **Status** | In development, orchestrator + MCP feeds + observability + framework comparison + Cloud Run deploy + streaming web UI implemented |
+| **Status** | In development; orchestrator, MCP feeds, live data, observability, benchmark provenance, framework comparison, Cloud Run deploy, and streaming web UI implemented |
 | **Owner** | Vijay Ananth Karunanithi |
 | **Last updated** | 2026-07-27 |
-| **Version** | 0.7.0 |
+| **Version** | 0.8.0 |
 
 ---
 
@@ -138,6 +138,7 @@ browser-verified (Playwright) end to end.
 
 | Date | Version | Change | Author |
 |---|---|---|---|
+| 2026-07-27 | 0.8.0 | Live data + observability pass: `LiveFeed` (NASA EONET + Open-Meteo) behind the Feed protocol with a "live" scenario, MCP live tools, and a browser conditions strip; benchmark made observable (provenance JSON in `compare/results/`, auto-regenerated COMPARISON table, Langfuse `session=bench` tags); behavioral eval gate (`make eval`); README badges + OBSERVABILITY.md + MCP-connect docs. 50 tests. | Vijay Ananth Karunanithi |
 | 2026-07-27 | 0.7.0 | Streaming web UI: NDJSON streaming endpoints (`streaming.py`) via `graph.stream`, CORS; Next.js/TypeScript/Tailwind/Framer Motion dashboard in `web/` with animated agent pipeline, live log, interactive approval modal, timings, and a browser demo-mode fallback. Four streaming tests (35 passed, 1 skipped); interactive flow browser-verified. | Vijay Ananth Karunanithi |
 | 2026-07-07 | 0.6.0 | Cloud Run deployment: FastAPI service (`service.py`) over a shared `runner.run_scenario`, container serves on `$PORT`, one-command `deploy/deploy.sh` (Cloud Build) plus Terraform IaC, DEPLOY.md runbook. Runner attaches tracing so deployed runs export to Langfuse. Service tests added (31 passed). | Vijay Ananth Karunanithi |
 | 2026-07-07 | 0.5.2 | Benchmark executed on Groq (`llama-3.3-70b-versatile`): runtime table filled in COMPARISON.md. CrewAI fixes surfaced by live runs: native-provider model name (no prefix), valid tool schema for strict providers, prompt-side length constraint after a live guardrail rejection. | Vijay Ananth Karunanithi |

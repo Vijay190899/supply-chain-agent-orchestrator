@@ -18,6 +18,7 @@ from typing import Any
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.types import Command
 
+from supplyagents.feeds import feed_for_scenario
 from supplyagents.graph import build_graph
 
 # One saver for the process; threads are keyed by thread_id.
@@ -45,7 +46,7 @@ def stream_run(scenario: str, thread_id: str, resume: str | None = None) -> Iter
       {"type": "done", "result": {...}}
       {"type": "error", "message"}
     """
-    graph = build_graph(_saver)
+    graph = build_graph(_saver, feed=feed_for_scenario(scenario))
     config = {"configurable": {"thread_id": thread_id}}
     graph_input: Any = (
         Command(resume=resume) if resume is not None else {"scenario": scenario, "events": []}

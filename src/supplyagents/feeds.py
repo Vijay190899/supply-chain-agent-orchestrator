@@ -28,6 +28,21 @@ class Feed(Protocol):
     def route_options(self, scenario: str) -> list[RouteOption]: ...
 
 
+def feed_for_scenario(scenario: str) -> "Feed | None":
+    """Pick the feed a scenario needs. The "live" scenario gets a LiveFeed
+    (real weather + events); everything else uses the graph's default
+    LocalFeed. LiveFeed is imported lazily so the network layer never loads on
+    the deterministic path."""
+    if scenario == "live":
+        from supplyagents.config import get_settings
+
+        if get_settings().live_feed_enabled:
+            from supplyagents.live import LiveFeed
+
+            return LiveFeed()
+    return None
+
+
 class LocalFeed:
     """In-process feed over the scenario fixtures."""
 

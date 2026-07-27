@@ -1,14 +1,15 @@
-.PHONY: install lint format test run docker compare help
+.PHONY: install lint format test eval run docker bench help
 
 help:
 	@echo "install  - create venv and install deps with uv"
 	@echo "lint     - ruff check + format check"
 	@echo "format   - ruff format"
-	@echo "test     - run pytest"
+	@echo "test     - run pytest (deterministic, network-free)"
+	@echo "eval     - run the behavioral invariant gate (business rules that must always hold)"
 	@echo "run      - run a simulated disruption scenario (CLI)"
 	@echo "serve    - start the HTTP service on :8080"
 	@echo "docker   - build the container image"
-	@echo "compare  - benchmark LangGraph vs CrewAI (needs OPENAI_API_KEY + compare extra)"
+	@echo "bench    - benchmark LangGraph vs CrewAI, write results JSON + regenerate the table"
 
 install:
 	uv sync --extra dev
@@ -23,6 +24,9 @@ format:
 test:
 	uv run pytest
 
+eval:
+	uv run pytest tests/test_invariants.py -v
+
 run:
 	uv run python -m supplyagents.simulate
 
@@ -32,6 +36,6 @@ serve:
 docker:
 	docker build -t supplyagents:local .
 
-compare:
+bench:
 	uv sync --extra dev --extra compare
 	uv run python -m supplyagents.compare.benchmark

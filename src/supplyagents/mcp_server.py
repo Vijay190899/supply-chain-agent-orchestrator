@@ -45,6 +45,22 @@ def route_options(scenario: str) -> list[dict]:
     return [dict(o) for o in providers.route_options(scenario)]
 
 
+@mcp.tool()
+def poll_live_disruptions() -> list[dict]:
+    """Real disruptions on the active lanes, from NASA EONET events and Open-Meteo weather."""
+    from supplyagents.live import LiveFeed
+
+    return [dict(d) for d in LiveFeed().poll_disruptions("live")]
+
+
+@mcp.tool()
+def live_conditions() -> list[dict]:
+    """Read-only current weather per port (includes calm and low). Free, keyless."""
+    from supplyagents.live import LiveFeed
+
+    return LiveFeed().conditions()
+
+
 def main() -> None:
     mcp.run()
 

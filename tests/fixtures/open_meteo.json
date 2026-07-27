@@ -1,0 +1,26 @@
+[
+  {
+    "latitude": 53.55,
+    "longitude": 9.99,
+    "current_units": { "wind_gusts_10m": "km/h", "precipitation": "mm" },
+    "current": { "time": "2026-07-27T10:15", "wind_gusts_10m": 82.0, "precipitation": 1.2, "weather_code": 95 }
+  },
+  {
+    "latitude": 59.91,
+    "longitude": 10.75,
+    "current_units": { "wind_gusts_10m": "km/h", "precipitation": "mm" },
+    "current": { "time": "2026-07-27T10:15", "wind_gusts_10m": 18.0, "precipitation": 0.0, "weather_code": 2 }
+  },
+  {
+    "latitude": 51.95,
+    "longitude": 4.14,
+    "current_units": { "wind_gusts_10m": "km/h", "precipitation": "mm" },
+    "current": { "time": "2026-07-27T10:15", "wind_gusts_10m": 54.0, "precipitation": 0.5, "weather_code": 80 }
+  },
+  {
+    "latitude": 1.26,
+    "longitude": 103.82,
+    "current_units": { "wind_gusts_10m": "km/h", "precipitation": "mm" },
+    "current": { "time": "2026-07-27T10:15", "wind_gusts_10m": 40.0, "precipitation": 0.0, "weather_code": 1 }
+  }
+]

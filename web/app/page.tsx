@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { ArrowUpRight, BookOpen } from "lucide-react";
 import { ShaderBackground } from "@/components/ShaderBackground";
 import { Manual } from "@/components/Manual";
+import { LiveConditions } from "@/components/LiveConditions";
 import { Reveal } from "@/components/Reveal";
 import { AgentPipeline, type Status } from "@/components/AgentPipeline";
 import { EventLog, type LogLine } from "@/components/EventLog";
@@ -195,6 +196,11 @@ export default function Home() {
               </div>
             </div>
           </div>
+        </Reveal>
+
+        {/* real current conditions */}
+        <Reveal delay={0.3} className="mt-3">
+          <LiveConditions />
         </Reveal>
 
         {/* pipeline */}

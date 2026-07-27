@@ -1,0 +1,117 @@
+{
+  "meta": {
+    "timestamp_utc": "2026-07-27T10:42:05+00:00",
+    "git_sha": "8a9c65d",
+    "scenario": "suez-blockage",
+    "runs": 5,
+    "model": "llama-3.3-70b-versatile",
+    "provider": "https://api.groq.com/openai/v1",
+    "python": "3.12.13",
+    "host": "Windows-11-10.0.26200-SP0",
+    "packages": {
+      "langgraph": "1.2.8",
+      "crewai": "1.15.1",
+      "langchain": "1.3.11"
+    }
+  },
+  "langgraph": {
+    "requests": {
+      "median": 1,
+      "mean": 1,
+      "p95": 1,
+      "min": 1,
+      "max": 1
+    },
+    "tokens": {
+      "median": 316,
+      "mean": 315.2,
+      "p95": 319,
+      "min": 310,
+      "max": 319
+    },
+    "seconds": {
+      "median": 0.62,
+      "mean": 0.87,
+      "p95": 1.95,
+      "min": 0.56,
+      "max": 1.95
+    },
+    "per_run": [
+      {
+        "seconds": 1.954,
+        "requests": 1,
+        "tokens": 316
+      },
+      {
+        "seconds": 0.619,
+        "requests": 1,
+        "tokens": 314
+      },
+      {
+        "seconds": 0.561,
+        "requests": 1,
+        "tokens": 310
+      },
+      {
+        "seconds": 0.619,
+        "requests": 1,
+        "tokens": 317
+      },
+      {
+        "seconds": 0.58,
+        "requests": 1,
+        "tokens": 319
+      }
+    ]
+  },
+  "crewai": {
+    "requests": {
+      "median": 9,
+      "mean": 9,
+      "p95": 9,
+      "min": 9,
+      "max": 9
+    },
+    "tokens": {
+      "median": 5980,
+      "mean": 5989.8,
+      "p95": 6055,
+      "min": 5951,
+      "max": 6055
+    },
+    "seconds": {
+      "median": 1.94,
+      "mean": 4.84,
+      "p95": 16.43,
+      "min": 1.82,
+      "max": 16.43
+    },
+    "per_run": [
+      {
+        "seconds": 2.156,
+        "requests": 9,
+        "tokens": 5980
+      },
+      {
+        "seconds": 1.819,
+        "requests": 9,
+        "tokens": 5951
+      },
+      {
+        "seconds": 1.857,
+        "requests": 9,
+        "tokens": 6055
+      },
+      {
+        "seconds": 1.937,
+        "requests": 9,
+        "tokens": 5997
+      },
+      {
+        "seconds": 16.433,
+        "requests": 9,
+        "tokens": 5966
+      }
+    ]
+  }
+}
