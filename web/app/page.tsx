@@ -133,7 +133,7 @@ export default function Home() {
   return (
     <>
       <ShaderBackground energy={energy} />
-      <main className="mx-auto max-w-[1180px] px-6 py-12 sm:px-10 sm:py-16">
+      <main className="mx-auto w-full max-w-[1560px] px-6 py-12 sm:px-10 sm:py-16 xl:px-16 2xl:py-20">
         {/* top bar */}
         <Reveal className="mb-10 flex items-center justify-end gap-2">
           <button
@@ -154,14 +154,14 @@ export default function Home() {
 
         {/* hero */}
         <Reveal delay={0.08}>
-          <h1 className="serif text-[46px] leading-[1.02] tracking-tight sm:text-[72px]">
+          <h1 className="serif leading-[1.02] tracking-tight text-[clamp(2.6rem,5.6vw,5.4rem)]">
             Four agents reroute the world.
             <br />
             <span className="grad italic">A human holds the line.</span>
           </h1>
         </Reveal>
         <Reveal delay={0.16}>
-          <p className="mt-5 max-w-xl text-[15px] leading-relaxed text-[var(--color-muted)]">
+          <p className="mt-5 max-w-2xl text-[15px] leading-relaxed text-[var(--color-muted)] xl:text-[17px]">
             A multi-agent orchestrator responds to a supply-chain disruption in real time, and stops
             for a person the moment the fix runs expensive. Pick a scenario and watch it work.
           </p>
