@@ -171,11 +171,7 @@ export default function Home() {
                   onClick={start}
                   disabled={busy}
                   whileTap={busy ? undefined : { scale: 0.97 }}
-                  className="flex flex-1 items-center justify-center rounded-xl px-8 py-3.5 text-[14px] font-semibold text-[#0a0710] transition-[filter] hover:brightness-110 focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60 lg:flex-none"
-                  style={{
-                    background:
-                      "linear-gradient(100deg, var(--color-cyan), var(--color-indigo))",
-                  }}
+                  className="btn-grad flex flex-1 items-center justify-center rounded-xl px-8 py-3.5 text-[14px] font-semibold text-[#0a0710] transition-[filter] hover:brightness-110 focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60 lg:flex-none"
                 >
                   {phase === "idle" ? "Run scenario" : busy ? "Working…" : "Run again"}
                 </motion.button>

@@ -2,80 +2,60 @@
 
 import { useEffect, useRef } from "react";
 
-/** A cinematic, cursor-reactive fragment shader: domain-warped fractal flow
- *  with a moody palette, drifting light, grain and vignette. Raw WebGL, no
- *  libraries. Falls back to a static frame under reduced-motion, and to a CSS
- *  gradient if WebGL is unavailable. */
+/** Cinematic, cursor-reactive fragment shader: a fast domain-warped flow field
+ *  with a vivid moody palette, drifting light and grain. Raw WebGL, no libs.
+ *  Always animates (the immersive background is the point); falls back to a CSS
+ *  gradient only if WebGL is unavailable. */
 
-const VERT = `
-attribute vec2 p;
-void main() { gl_Position = vec4(p, 0.0, 1.0); }
-`;
+const VERT = `attribute vec2 p; void main(){ gl_Position = vec4(p,0.0,1.0); }`;
 
 const FRAG = `
 precision highp float;
 uniform vec2  uRes;
 uniform float uTime;
 uniform vec2  uMouse;   // 0..1, eased
-uniform float uEnergy;  // 0..1, rises while a run is active
+uniform float uEnergy;  // 0..1, rises during a run
 
-// --- value noise + fbm ---
-float hash(vec2 p){ p = fract(p*vec2(123.34, 345.45)); p += dot(p, p+34.345); return fract(p.x*p.y); }
+float hash(vec2 p){ p=fract(p*vec2(123.34,345.45)); p+=dot(p,p+34.345); return fract(p.x*p.y); }
 float noise(vec2 p){
-  vec2 i = floor(p), f = fract(p);
-  vec2 u = f*f*(3.0-2.0*f);
-  return mix(mix(hash(i+vec2(0,0)), hash(i+vec2(1,0)), u.x),
-             mix(hash(i+vec2(0,1)), hash(i+vec2(1,1)), u.x), u.y);
+  vec2 i=floor(p), f=fract(p); vec2 u=f*f*(3.0-2.0*f);
+  return mix(mix(hash(i),hash(i+vec2(1,0)),u.x), mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),u.x), u.y);
 }
-float fbm(vec2 p){
-  float v = 0.0, a = 0.5;
-  for(int i=0;i<6;i++){ v += a*noise(p); p = p*2.02 + vec2(37.1,17.3); a *= 0.5; }
-  return v;
-}
+float fbm(vec2 p){ float v=0.0,a=0.5; for(int i=0;i<6;i++){ v+=a*noise(p); p=p*2.03+vec2(37.1,17.3); a*=0.5;} return v; }
 
-// IQ cosine palette, tuned deep indigo -> teal -> warm rim
 vec3 palette(float t){
-  vec3 a = vec3(0.10, 0.11, 0.18);
-  vec3 b = vec3(0.32, 0.28, 0.45);
-  vec3 c = vec3(1.00, 1.00, 1.00);
-  vec3 d = vec3(0.10, 0.42, 0.72);
-  return a + b*cos(6.28318*(c*t + d));
+  vec3 a=vec3(0.14,0.13,0.22), b=vec3(0.42,0.36,0.55),
+       c=vec3(1.0,1.0,1.0),   d=vec3(0.10,0.42,0.72);
+  return a + b*cos(6.28318*(c*t+d));
 }
 
 void main(){
-  vec2 uv = gl_FragCoord.xy / uRes.xy;
-  vec2 p = (gl_FragCoord.xy - 0.5*uRes.xy) / uRes.y;
+  vec2 uv = gl_FragCoord.xy/uRes.xy;
+  vec2 p = (gl_FragCoord.xy - 0.5*uRes.xy)/uRes.y;
+  float t = uTime*0.16;
+  vec2 m = (uMouse-0.5);
 
-  float t = uTime * 0.045;
-  vec2 m = (uMouse - 0.5);
+  // advect the field so the whole cloud drifts, and fold it through itself
+  p += vec2(t*0.10, -t*0.06);
+  vec2 q = vec2(fbm(p*1.5 + t*0.6), fbm(p*1.5 + vec2(5.2,1.3) - t*0.5));
+  vec2 r = vec2(fbm(p*1.5 + 1.9*q + m*1.2 + t*0.8),
+                fbm(p*1.5 + 1.9*q + vec2(8.3,2.8) - m*1.2 - t*0.4));
+  float f = fbm(p*1.5 + 2.6*r);
 
-  // domain warp: fold the field through itself, nudged by the cursor
-  vec2 q = vec2(fbm(p*1.6 + t), fbm(p*1.6 + vec2(4.2,1.3) - t));
-  vec2 r = vec2(fbm(p*1.6 + 1.7*q + m*0.6 + t*0.6),
-                fbm(p*1.6 + 1.7*q + vec2(8.3,2.8) - m*0.6));
-  float f = fbm(p*1.6 + 2.4*r);
+  vec3 col = palette(f*0.9 + length(r)*0.5 + t*0.5);
+  col = mix(vec3(0.02,0.03,0.06), col, smoothstep(0.02,0.9,f));
+  col *= 0.62 + 0.45*uEnergy;
 
-  vec3 col = palette(f*0.9 + length(r)*0.35 + t*0.4);
-  // deepen to a cinematic near-black base, keep it a backdrop
-  col = mix(vec3(0.015, 0.02, 0.035), col, smoothstep(0.1, 0.95, f));
-  col *= 0.42 + 0.5*uEnergy;
+  float rim = smoothstep(0.58,0.98,f);
+  col += rim * vec3(0.95,0.55,0.28) * (0.18 + 0.22*uEnergy);
 
-  // warm rim light following flow crests
-  float rim = smoothstep(0.62, 0.98, f);
-  col += rim * vec3(0.9, 0.55, 0.28) * (0.10 + 0.18*uEnergy);
+  // bright light bloom following the cursor
+  float d = length(p - m*vec2(uRes.x/uRes.y,1.0));
+  col += (0.14 + 0.16*uEnergy) * exp(-d*1.7) * vec3(0.42,0.72,1.15);
 
-  // soft light bloom trailing the cursor
-  float d = length(p - m*vec2(uRes.x/uRes.y, 1.0));
-  col += (0.05 + 0.12*uEnergy) * exp(-d*2.2) * vec3(0.35, 0.6, 1.0);
-
-  // vignette
-  col *= smoothstep(1.25, 0.35, length((uv-0.5)*vec2(1.15,1.0)));
-
-  // grain
-  float g = hash(gl_FragCoord.xy + uTime);
-  col += (g - 0.5) * 0.035;
-
-  gl_FragColor = vec4(col, 1.0);
+  col *= smoothstep(1.35,0.35, length((uv-0.5)*vec2(1.1,1.0)));   // vignette
+  col += (hash(gl_FragCoord.xy + uTime)-0.5)*0.03;                 // grain
+  gl_FragColor = vec4(col,1.0);
 }
 `;
 
@@ -84,7 +64,7 @@ function compile(gl: WebGLRenderingContext, type: number, src: string) {
   gl.shaderSource(s, src);
   gl.compileShader(s);
   if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
-    console.error(gl.getShaderInfoLog(s));
+    console.error("shader compile:", gl.getShaderInfoLog(s));
     return null;
   }
   return s;
@@ -101,9 +81,10 @@ export function ShaderBackground({ energy = 0 }: { energy?: number }) {
     const canvas = ref.current;
     if (!canvas) return;
     const gl = canvas.getContext("webgl", { antialias: false, alpha: false });
-    if (!gl) return; // CSS fallback handles it
+    if (!gl) return;
 
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const speed = reduce ? 0.3 : 1; // gentler, but never frozen
     const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
 
     const vs = compile(gl, gl.VERTEX_SHADER, VERT);
@@ -130,8 +111,10 @@ export function ShaderBackground({ energy = 0 }: { energy?: number }) {
     let w = 0;
     let h = 0;
     const resize = () => {
-      w = Math.floor(canvas.clientWidth * dpr);
-      h = Math.floor(canvas.clientHeight * dpr);
+      const cw = canvas.clientWidth || window.innerWidth;
+      const ch = canvas.clientHeight || window.innerHeight;
+      w = Math.max(2, Math.floor(cw * dpr));
+      h = Math.max(2, Math.floor(ch * dpr));
       canvas.width = w;
       canvas.height = h;
       gl.viewport(0, 0, w, h);
@@ -139,7 +122,6 @@ export function ShaderBackground({ energy = 0 }: { energy?: number }) {
     resize();
     window.addEventListener("resize", resize);
 
-    // eased cursor
     const mouse = { x: 0.5, y: 0.5 };
     const target = { x: 0.5, y: 0.5 };
     const onMove = (e: PointerEvent) => {
@@ -152,21 +134,22 @@ export function ShaderBackground({ energy = 0 }: { energy?: number }) {
     let energyCur = 0;
     const start = performance.now();
     const frame = (now: number) => {
+      if (w < 3) resize(); // guard against a 0-size first paint
       mouse.x += (target.x - mouse.x) * 0.05;
       mouse.y += (target.y - mouse.y) * 0.05;
       energyCur += (energyRef.current - energyCur) * 0.04;
       gl.uniform2f(uRes, w, h);
-      gl.uniform1f(uTime, reduce ? 8.0 : (now - start) / 1000);
+      gl.uniform1f(uTime, ((now - start) / 1000) * speed);
       gl.uniform2f(uMouse, mouse.x, mouse.y);
       gl.uniform1f(uEnergy, energyCur);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
-      if (!reduce) raf = requestAnimationFrame(frame);
+      raf = requestAnimationFrame(frame);
     };
     raf = requestAnimationFrame(frame);
 
     const onVis = () => {
-      if (document.hidden) cancelAnimationFrame(raf);
-      else if (!reduce) raf = requestAnimationFrame(frame);
+      cancelAnimationFrame(raf);
+      if (!document.hidden) raf = requestAnimationFrame(frame);
     };
     document.addEventListener("visibilitychange", onVis);
 
