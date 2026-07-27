@@ -2,6 +2,8 @@
 
 import { useCallback, useRef, useState } from "react";
 import { Play, RotateCcw, ArrowUpRight } from "lucide-react";
+import { RadarBackground } from "@/components/RadarBackground";
+import { RouteChart } from "@/components/RouteChart";
 import { AgentPipeline, type Status } from "@/components/AgentPipeline";
 import { EventLog, type LogLine } from "@/components/EventLog";
 import { ApprovalModal } from "@/components/ApprovalModal";
@@ -22,7 +24,7 @@ const IDLE: Record<AgentId, Status> = {
 };
 
 export default function Home() {
-  const [scenario, setScenario] = useState("suez-blockage");
+  const [scenarioId, setScenarioId] = useState("suez-blockage");
   const [phase, setPhase] = useState<Phase>("idle");
   const [statuses, setStatuses] = useState<Record<AgentId, Status>>(IDLE);
   const [log, setLog] = useState<LogLine[]>([]);
@@ -32,6 +34,8 @@ export default function Home() {
 
   const threadRef = useRef("");
   const logId = useRef(0);
+
+  const scenario = SCENARIOS.find((s) => s.id === scenarioId)!;
 
   const pushLog = useCallback((agent: LogLine["agent"], texts: string[]) => {
     if (texts.length === 0) return;
@@ -62,7 +66,7 @@ export default function Home() {
         setStatuses((prev) => ({ ...prev, human_approval: "active" }));
         setApproval(e.payload);
         setPhase("awaiting");
-        pushLog("system", ["paused · awaiting human decision on cost override"]);
+        pushLog("system", ["hold · master's authority required on cost override"]);
       } else if (e.type === "done") {
         setResult(e.result);
         setStatuses((prev) => {
@@ -72,7 +76,7 @@ export default function Home() {
         });
         setPhase("done");
       } else if (e.type === "error") {
-        pushLog("system", [`error: ${e.message}`]);
+        pushLog("system", [`fault: ${e.message}`]);
         setPhase("error");
       }
     },
@@ -84,7 +88,7 @@ export default function Home() {
       try {
         for await (const e of gen) handleEvent(e);
       } catch (err) {
-        pushLog("system", [`stream error: ${(err as Error).message}`]);
+        pushLog("system", [`link fault: ${(err as Error).message}`]);
         setPhase("error");
       }
     },
@@ -99,16 +103,16 @@ export default function Home() {
     setResult(null);
     setApproval(null);
     logId.current = 0;
-    await consume(runStream(scenario));
-  }, [consume, scenario]);
+    await consume(runStream(scenarioId));
+  }, [consume, scenarioId]);
 
   const decide = useCallback(
     async (decision: Decision) => {
       setApproval(null);
       setPhase("running");
-      await consume(resumeStream(scenario, threadRef.current, decision));
+      await consume(resumeStream(scenarioId, threadRef.current, decision));
     },
-    [consume, scenario],
+    [consume, scenarioId],
   );
 
   const reset = useCallback(() => {
@@ -122,62 +126,68 @@ export default function Home() {
 
   const busy = phase === "running" || phase === "awaiting";
   const ranOnce = phase !== "idle";
-  const blurb = SCENARIOS.find((s) => s.id === scenario)?.blurb;
+  const rerouted = statuses.optimizer === "done" && scenario.blocked;
 
   return (
-    <main className="mx-auto max-w-[1140px] px-5 py-10 sm:px-8">
-      <Header />
+    <>
+      <RadarBackground />
+      <main className="mx-auto max-w-[1160px] px-5 py-8 sm:px-8">
+        <Header />
 
-      {/* control bar: scenario + run merged */}
-      <section className="panel mt-8 p-4 sm:p-5">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-stretch">
-          <div className="min-w-0 flex-1">
-            <ScenarioPicker selected={scenario} onSelect={setScenario} disabled={busy} />
-            {blurb && (
-              <p className="mt-2.5 px-0.5 text-[12.5px] text-[var(--color-text-2)]">{blurb}</p>
-            )}
-          </div>
-          <div className="flex items-center gap-2 lg:flex-col lg:items-stretch lg:justify-center">
-            <button
-              onClick={start}
-              disabled={busy}
-              className="flex flex-1 items-center justify-center gap-2 rounded-[8px] px-6 py-3 text-[14px] font-semibold text-[#241300] transition-[filter] hover:brightness-110 focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60 lg:flex-none"
-              style={{ background: "var(--color-machine)" }}
-            >
-              <Play size={16} strokeWidth={2.5} />
-              {phase === "idle" ? "Run" : busy ? "Running" : "Run again"}
-            </button>
-            {(phase === "done" || phase === "error") && (
+        {/* control bar */}
+        <section className="panel mt-6 p-3.5">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-stretch">
+            <div className="min-w-0 flex-1">
+              <ScenarioPicker selected={scenarioId} onSelect={setScenarioId} disabled={busy} />
+              <p className="mt-2 px-0.5 text-[12.5px] text-[var(--color-muted)]">{scenario.blurb}</p>
+            </div>
+            <div className="flex items-stretch gap-2 lg:flex-col lg:justify-center">
               <button
-                onClick={reset}
-                aria-label="Reset"
-                className="flex items-center justify-center gap-1.5 rounded-[8px] border border-[var(--color-border-strong)] px-4 py-3 text-[13px] text-[var(--color-text-2)] transition-colors hover:text-[var(--color-text)] focus-visible:outline-none"
+                onClick={start}
+                disabled={busy}
+                className="flex flex-1 items-center justify-center gap-2 rounded-[4px] px-6 py-3 text-[13px] font-semibold tracking-wide text-[#241300] uppercase transition-[filter] hover:brightness-110 focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60 lg:flex-none"
+                style={{ background: "var(--color-amber)" }}
               >
-                <RotateCcw size={14} /> Reset
+                <Play size={15} strokeWidth={2.5} />
+                {phase === "idle" ? "Tasking" : busy ? "Working" : "Re-task"}
               </button>
-            )}
+              {(phase === "done" || phase === "error") && (
+                <button
+                  onClick={reset}
+                  aria-label="Reset"
+                  className="flex items-center justify-center rounded-[4px] border border-[var(--color-hair-2)] px-4 text-[var(--color-muted)] transition-colors hover:text-[var(--color-text)] focus-visible:outline-none"
+                >
+                  <RotateCcw size={14} />
+                </button>
+              )}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* focal: the pipeline */}
-      <section className="mt-4">
-        <AgentPipeline statuses={statuses} />
-      </section>
+        {/* hero: the lane chart */}
+        <section className="mt-3">
+          <RouteChart scenario={scenario} rerouted={rerouted} running={busy} />
+        </section>
 
-      {/* results + live log */}
-      <section className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-12">
-        <div className="lg:col-span-7">
-          <ResultPanel result={result} timings={timings} active={ranOnce} />
-        </div>
-        <div className="lg:col-span-5">
-          <EventLog lines={log} />
-        </div>
-      </section>
+        {/* pipeline of watch stations */}
+        <section className="mt-3">
+          <AgentPipeline statuses={statuses} awaiting={phase === "awaiting"} />
+        </section>
 
-      <Footer />
-      <ApprovalModal payload={approval} onDecide={decide} />
-    </main>
+        {/* readout + notice feed */}
+        <section className="mt-3 grid grid-cols-1 gap-3 lg:grid-cols-12">
+          <div className="lg:col-span-7">
+            <ResultPanel result={result} timings={timings} active={ranOnce} />
+          </div>
+          <div className="lg:col-span-5">
+            <EventLog lines={log} live={busy} />
+          </div>
+        </section>
+
+        <Footer />
+        <ApprovalModal payload={approval} onDecide={decide} />
+      </main>
+    </>
   );
 }
 
@@ -185,30 +195,30 @@ function Header() {
   return (
     <header className="flex items-start justify-between gap-4">
       <div>
-        <div className="mb-2 flex items-center gap-2 font-mono text-[11px]">
+        <div className="mb-2 flex items-center gap-2">
           <span
             className="h-1.5 w-1.5 rounded-full"
-            style={{ background: IS_DEMO ? "var(--color-machine)" : "var(--color-success)" }}
+            style={{ background: IS_DEMO ? "var(--color-amber)" : "var(--color-nominal)" }}
           />
-          <span className="text-[var(--color-faint)]">
-            {IS_DEMO ? "demo mode · replayed runs" : "live · connected to backend"}
+          <span className="kicker">
+            {IS_DEMO ? "watch station · replay" : "watch station · live link"}
           </span>
         </div>
-        <h1 className="text-[26px] font-semibold tracking-tight sm:text-[30px]">
+        <h1 className="font-[var(--font-display)] text-[30px] leading-none font-bold tracking-tight sm:text-[38px]">
           Disruption Console
         </h1>
-        <p className="mt-1.5 max-w-xl text-[13.5px] text-[var(--color-text-2)]">
-          Four LangGraph agents respond to a supply-chain disruption, and stop for a human when the
-          fix gets expensive. Watch it run.
+        <p className="mt-2 max-w-lg text-[13.5px] text-[var(--color-muted)]">
+          Vessel-traffic control for autonomous logistics agents. Four watch stations reroute a
+          blocked shipping lane and hold for a human when the fix runs expensive.
         </p>
       </div>
       <a
         href="https://github.com/Vijay190899/supply-chain-agent-orchestrator"
         target="_blank"
         rel="noreferrer"
-        className="flex shrink-0 items-center gap-1 rounded-[8px] border border-[var(--color-border)] px-3 py-2 font-mono text-[12px] text-[var(--color-text-2)] transition-colors hover:border-[var(--color-border-strong)] hover:text-[var(--color-text)]"
+        className="flex shrink-0 items-center gap-1 rounded-[4px] border border-[var(--color-hair)] px-3 py-2 telemetry text-[11px] text-[var(--color-muted)] transition-colors hover:border-[var(--color-hair-2)] hover:text-[var(--color-text)]"
       >
-        source <ArrowUpRight size={13} />
+        source <ArrowUpRight size={12} />
       </a>
     </header>
   );
@@ -216,10 +226,12 @@ function Header() {
 
 function Footer() {
   return (
-    <footer className="mt-10 flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[11.5px] text-[var(--color-faint)]">
-      <span>langgraph</span> · <span>mcp feeds</span> · <span>guardrails</span> ·{" "}
-      <span>langfuse</span> · <span>crewai comparison</span>
-      <span className="ml-auto">the approval gate is a real graph interrupt, not a scripted pause</span>
+    <footer className="mt-8 flex flex-wrap items-center gap-x-2 gap-y-1 telemetry text-[10px] text-[var(--color-faint)]">
+      <span>LANGGRAPH</span> · <span>MCP FEEDS</span> · <span>GUARDRAILS</span> ·{" "}
+      <span>LANGFUSE</span> · <span>CREWAI BENCHMARK</span>
+      <span className="ml-auto normal-case">
+        the approval hold is a real graph interrupt, not a scripted pause
+      </span>
     </footer>
   );
 }

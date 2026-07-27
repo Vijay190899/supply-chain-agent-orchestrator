@@ -1,28 +1,30 @@
 @import "tailwindcss";
 
-/* Operator-console theme. Flat by default, cool near-black, two load-bearing
-   signal colors: amber = machine working, cyan = human's turn. Depth is
-   earned (one focal tier + the modal), never ambient glass. */
+/* ECDIS night-watch palette. Cold desaturated navy (dark by function, like a
+   ship's bridge at night), one rationed warm accent, color that means state. */
 @theme {
-  --color-bg: #0b0d10;
-  --color-surface: #111419;
-  --color-surface-2: #161a21;
-  --color-elevated: #191e27;
-  --color-border: rgba(255, 255, 255, 0.06);
-  --color-border-strong: rgba(255, 255, 255, 0.12);
+  --color-void: #070b12;
+  --color-deep: #0a111c;
+  --color-panel: #0e1725;
+  --color-panel-2: #121e30;
+  --color-hair: rgba(150, 180, 220, 0.1);
+  --color-hair-2: rgba(150, 180, 220, 0.18);
 
-  --color-text: #e8eaf0;
-  --color-text-2: #99a1b0;
-  --color-faint: #59606e;
+  --color-text: #dce4f0;
+  --color-muted: #7c8aa0;
+  --color-faint: #4b586e;
 
-  /* Semantic signals. Swapping any of these would break meaning. */
-  --color-machine: #f5a524; /* autonomous agent activity */
-  --color-human: #4fd6c0; /* human-in-the-loop moment */
-  --color-success: #46b98a; /* approved / complete */
-  --color-danger: #e5556a; /* rejected / failure */
+  /* Signals, rationed and semantic. */
+  --color-amber: #f5a524; /* live machine work / active reroute */
+  --color-amber-hot: #ffd591;
+  --color-cyan: #38d6d0; /* human-in-the-loop / your decision */
+  --color-cyan-hot: #a9f2ee;
+  --color-rose: #f0567a; /* the disruption / caution / reject */
+  --color-nominal: #5bb98c; /* settled / clear */
 
-  --font-sans: var(--font-grotesk), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-jbmono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-sans: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-display: var(--font-display), var(--font-sans), sans-serif;
 }
 
 html {
@@ -30,47 +32,56 @@ html {
 }
 
 body {
-  background-color: var(--color-bg);
+  background-color: var(--color-void);
   color: var(--color-text);
   font-family: var(--font-sans);
+  /* faint film grain: the single biggest 'not-plastic' tell */
+  position: relative;
+}
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-/* Flat surface, tier 0. Most things. */
+/* Panels: flat, hairline, faint top-lit edge. No glass, no glow. */
 .panel {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 10px;
+  background: var(--color-panel);
+  border: 1px solid var(--color-hair);
+  border-radius: 4px;
+}
+.panel-lit {
+  background: linear-gradient(180deg, var(--color-panel-2), var(--color-panel));
+  border: 1px solid var(--color-hair-2);
+  border-radius: 4px;
+  box-shadow: inset 0 1px 0 rgba(180, 210, 245, 0.05);
 }
 
-/* The focal tier: a lit top edge, not glass. Used only on the pipeline stage
-   and the modal. */
-.panel-focal {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border-strong);
-  border-radius: 12px;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    0 12px 32px -16px rgba(0, 0, 0, 0.7);
+/* AIS/telemetry numerals: tabular + slashed zero. */
+.telemetry {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums slashed-zero;
+  font-feature-settings: "zero" 1;
 }
 
-/* Faint schematic substrate, used ONLY on the pipeline stage. */
-.blueprint {
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.022) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.022) 1px, transparent 1px);
-  background-size: 22px 22px;
-}
-
-.tabular {
-  font-variant-numeric: tabular-nums;
+.kicker {
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 10px;
+  color: var(--color-faint);
 }
 
 .thin-scroll::-webkit-scrollbar {
-  width: 7px;
+  width: 6px;
 }
 .thin-scroll::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 7px;
+  background: var(--color-hair-2);
+  border-radius: 6px;
 }
 .thin-scroll::-webkit-scrollbar-track {
   background: transparent;

@@ -2,10 +2,10 @@
 
 import { SCENARIOS, type Scenario } from "@/lib/scenarios";
 
-const SEV_COLOR: Record<Scenario["severity"], string> = {
-  none: "var(--color-success)",
-  moderate: "var(--color-machine)",
-  severe: "var(--color-danger)",
+const SEV: Record<Scenario["severity"], { tag: string; color: string }> = {
+  nominal: { tag: "NOMINAL", color: "var(--color-nominal)" },
+  caution: { tag: "CAUTION", color: "var(--color-amber)" },
+  critical: { tag: "CRITICAL", color: "var(--color-rose)" },
 };
 
 export function ScenarioPicker({
@@ -21,37 +21,40 @@ export function ScenarioPicker({
     <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
       {SCENARIOS.map((s) => {
         const active = selected === s.id;
+        const sev = SEV[s.severity];
         return (
           <button
             key={s.id}
             onClick={() => !disabled && onSelect(s.id)}
             disabled={disabled}
             aria-pressed={active}
-            className="group relative rounded-[8px] px-3.5 py-3 text-left transition-colors focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+            className="group relative rounded-[4px] px-3 py-2.5 text-left transition-colors focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
             style={{
-              background: active ? "var(--color-surface-2)" : "transparent",
-              border: `1px solid ${active ? "var(--color-border-strong)" : "var(--color-border)"}`,
+              background: active ? "var(--color-panel-2)" : "transparent",
+              border: `1px solid ${active ? "var(--color-hair-2)" : "var(--color-hair)"}`,
             }}
           >
             {active && (
               <span
-                className="absolute top-2.5 bottom-2.5 left-0 w-[2px] rounded-full"
-                style={{ background: "var(--color-machine)" }}
+                className="absolute top-2 bottom-2 left-0 w-[2px]"
+                style={{ background: sev.color }}
               />
             )}
             <div className="flex items-center justify-between">
-              <span
-                className="text-[13.5px] font-medium"
-                style={{ color: active ? "var(--color-text)" : "var(--color-text-2)" }}
-              >
-                {s.title}
+              <span className="telemetry text-[11px] text-[var(--color-muted)]">{s.code}</span>
+              <span className="telemetry text-[9px]" style={{ color: sev.color }}>
+                {sev.tag}
               </span>
-              <span
-                className="h-1.5 w-1.5 rounded-full"
-                style={{ background: SEV_COLOR[s.severity] }}
-              />
             </div>
-            <div className="mt-0.5 font-mono text-[11px] text-[var(--color-faint)]">{s.route}</div>
+            <div
+              className="mt-0.5 text-[13.5px] font-medium"
+              style={{ color: active ? "var(--color-text)" : "var(--color-muted)" }}
+            >
+              {s.title}
+            </div>
+            <div className="telemetry mt-0.5 text-[10px] text-[var(--color-faint)]">
+              {s.origin} → {s.dest}
+            </div>
           </button>
         );
       })}
