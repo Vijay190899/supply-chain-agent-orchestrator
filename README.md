@@ -17,6 +17,53 @@ Four roles working off shared state:
 
 State is saved, so a run can pause for that approval and pick up later without losing its place.
 
+## How the orchestration works
+
+It isn't a linear pipeline. The graph routes on state, and the expensive branch stops dead at a human before anything commits. That pause is a real LangGraph `interrupt()`: it checkpoints the run to SQLite and resumes on the ruling, minutes or days later, without re-running the earlier agents.
+
+```mermaid
+flowchart TD
+    START(["disruption scenario"]) --> MON
+
+    FEEDS["weather · news · logistics<br/>(exposed over MCP)"]:::feed -. tool calls .-> MON
+    MON["Monitor<br/>poll feeds for active-route impact"]:::machine
+    MON --> D1{"disruption on an<br/>active route?"}
+    D1 -- "no" --> CLR(["end · lanes nominal"])
+    D1 -- "yes" --> OPT
+
+    OPT["Optimizer<br/>price reroutes, pick cheapest<br/>under the 72h ETA cap"]:::machine
+    OPT --> D2{"cost Δ over the<br/>15% ceiling?"}
+    D2 -- "no · within budget" --> COM
+
+    subgraph HOLD["human in the loop, a real graph interrupt (not a scripted pause)"]
+        direction TB
+        GATE["Approval<br/>interrupt() pauses the graph"]:::human
+        CK[("SQLite<br/>checkpoint")]:::store
+        GATE <-. persist / resume .-> CK
+        GATE --> RULE{"human ruling"}
+    end
+
+    D2 -- "yes · expensive" --> GATE
+    RULE -- "authorize" --> COM
+    RULE -- "hold / reject" --> COM
+
+    COM["Communicator<br/>draft notice: reroute if authorized,<br/>delay if rejected"]:::machine
+    COM --> GRD{"guardrails<br/>allowlist + output validation"}
+    GRD --> OUT(["notice issued · run complete"])
+
+    MON -.-> TRACE["Langfuse<br/>traces every node: path, latency, tokens"]:::trace
+    OPT -.-> TRACE
+    COM -.-> TRACE
+
+    classDef machine fill:#101a30,stroke:#f5a524,color:#e8eaf4;
+    classDef human fill:#0c2a2c,stroke:#38d6d0,color:#e8eaf4;
+    classDef store fill:#161247,stroke:#93a4ff,color:#e8eaf4;
+    classDef feed fill:#14182a,stroke:#7c8aa0,color:#c3ccdd;
+    classDef trace fill:#180f24,stroke:#a371f7,color:#c3ccdd;
+```
+
+Amber is autonomous agent work; cyan is the human's call. Agents draft and propose, but anything that breaks the cost ceiling routes through the gate, where the graph literally suspends until a person authorizes it.
+
 ## LangGraph vs CrewAI, the reason this project exists
 
 I build the orchestrator twice:
