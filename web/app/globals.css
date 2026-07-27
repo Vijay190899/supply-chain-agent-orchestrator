@@ -2,9 +2,9 @@
 
 /* Cinematic, immersive. Content floats as frosted glass over a living shader. */
 @theme {
-  --color-ink: #eaecf4;
-  --color-muted: #9aa4b6;
-  --color-faint: #5a6376;
+  --color-ink: #f2f4fa;
+  --color-muted: #c3ccdd;
+  --color-faint: #8b95ab;
 
   --color-glass: rgba(14, 18, 30, 0.5);
   --color-glass-2: rgba(20, 26, 42, 0.6);
@@ -55,10 +55,10 @@ body::after {
   box-shadow: 0 30px 80px -40px rgba(0, 0, 0, 0.85);
 }
 .glass {
-  background: rgba(10, 14, 24, 0.38);
+  background: rgba(8, 12, 21, 0.62);
 }
 .glass-2 {
-  background: rgba(16, 21, 36, 0.52);
+  background: rgba(12, 17, 29, 0.74);
 }
 /* the gradient hairline: bright at the top-left, fading away */
 .glass::before,
